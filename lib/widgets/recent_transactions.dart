@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
+import 'package:finapp/widgets/transaction_detail_dialog.dart';
 import 'package:signals/signals_flutter.dart';
 
 class RecentTransactions extends StatelessWidget {
@@ -65,12 +66,25 @@ class RecentTransactions extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  onTap: () =>
+                      _showTransactionDetails(context, transaction, category),
                 ),
               );
             },
           );
         }),
       ],
+    );
+  }
+
+  void _showTransactionDetails(
+      BuildContext context, Transaction transaction, Category category) {
+    showDialog(
+      context: context,
+      builder: (context) => TransactionDetailDialog(
+        transaction: transaction,
+        category: category,
+      ),
     );
   }
 }

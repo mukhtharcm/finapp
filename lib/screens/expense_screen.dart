@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/models/transaction.dart';
+import 'package:finapp/models/category.dart';
 import 'package:finapp/screens/add_transaction_screen.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:finapp/widgets/transaction_detail_dialog.dart';
 
 class ExpenseScreen extends StatelessWidget {
   final FinanceService financeService;
@@ -24,13 +26,18 @@ class ExpenseScreen extends StatelessWidget {
           itemCount: expenseTransactions.length,
           itemBuilder: (context, index) {
             final transaction = expenseTransactions[index];
+            final category = financeService.categories.firstWhere(
+              (c) => c.id == transaction.categoryId,
+              orElse: () => Category(name: 'Uncategorized', icon: '❓'),
+            );
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: theme.colorScheme.errorContainer,
-                  child: Icon(Icons.trending_down_rounded,
-                      color: theme.colorScheme.error),
+                  child: Text(category.icon,
+                      style: TextStyle(
+                          fontSize: 24, color: theme.colorScheme.error)),
                 ),
                 title: Text(transaction.description,
                     style: theme.textTheme.titleMedium),
@@ -42,6 +49,8 @@ class ExpenseScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                onTap: () =>
+                    _showTransactionDetails(context, transaction, category),
               ),
             );
           },
@@ -60,6 +69,17 @@ class ExpenseScreen extends StatelessWidget {
           );
         },
         child: const Icon(Icons.add_rounded),
+      ),
+    );
+  }
+
+  void _showTransactionDetails(
+      BuildContext context, Transaction transaction, Category category) {
+    showDialog(
+      context: context,
+      builder: (context) => TransactionDetailDialog(
+        transaction: transaction,
+        category: category,
       ),
     );
   }
