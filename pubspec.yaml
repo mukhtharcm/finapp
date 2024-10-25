@@ -1,0 +1,26 @@
+name: finapp
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  flex_color_scheme: ^7.3.1
+  flutter:
+    sdk: flutter
+  intl: ^0.19.0
+  provider: ^6.1.2
+  pocketbase: ^0.18.1
+  flutter_secure_storage: ^9.0.0
+  signals: ^1.5.0
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
