@@ -17,6 +17,16 @@ class AuthService {
     await _pb.collection('users').authWithPassword(email, password);
   }
 
+  Future<void> signUp(String email, String password) async {
+    await _pb.collection('users').create(body: {
+      'email': email,
+      'password': password,
+      'passwordConfirm': password,
+    });
+    // After creating the user, log them in
+    await login(email, password);
+  }
+
   Future<void> logout() async {
     _pb.authStore.clear();
   }

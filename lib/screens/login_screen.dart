@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:finapp/screens/signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthService authService;
@@ -141,6 +142,24 @@ class _LoginScreenState extends State<LoginScreen> {
                 );
               }).animate().fadeIn(delay: 1200.ms, duration: 600.ms),
               const Spacer(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Don't have an account?"),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              SignUpScreen(authService: widget.authService),
+                        ),
+                      );
+                    },
+                    child: const Text('Sign Up'),
+                  ),
+                ],
+              ).animate().fadeIn(delay: 1400.ms, duration: 600.ms),
             ],
           ),
         ),
