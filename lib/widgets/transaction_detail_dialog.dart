@@ -39,7 +39,7 @@ class TransactionDetailDialog extends StatelessWidget {
                   transaction.description,
                   style: theme.textTheme.headlineSmall,
                   textAlign: TextAlign.center,
-                ).animate().fadeIn(duration: 300.ms, delay: 100.ms),
+                ).animate().fadeIn(duration: 200.ms, delay: 50.ms),
                 const SizedBox(height: 20),
                 _buildDetailRow(
                   context,
@@ -49,27 +49,27 @@ class TransactionDetailDialog extends StatelessWidget {
                   color: transaction.type == TransactionType.expense
                       ? theme.colorScheme.error
                       : theme.colorScheme.primary,
-                  delay: 200.ms,
+                  delay: 100.ms,
                 ),
                 _buildDetailRow(
                   context,
                   'Category',
                   category.name,
                   Icons.category,
-                  delay: 300.ms,
+                  delay: 150.ms,
                 ),
                 _buildDetailRow(
                   context,
                   'Date',
                   dateFormat.format(transaction.timestamp),
                   Icons.calendar_today,
-                  delay: 400.ms,
+                  delay: 200.ms,
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Close'),
-                ).animate().fadeIn(delay: 500.ms, duration: 300.ms),
+                ).animate().fadeIn(delay: 250.ms, duration: 200.ms),
               ],
             ),
           ),
@@ -83,7 +83,7 @@ class TransactionDetailDialog extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 40, color: theme.colorScheme.onPrimaryContainer),
               ),
-            ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack),
+            ).animate().scale(duration: 200.ms, curve: Curves.easeOutBack),
           ),
         ],
       ),
@@ -115,8 +115,8 @@ class TransactionDetailDialog extends StatelessWidget {
         ],
       )
           .animate()
-          .fadeIn(delay: delay, duration: 300.ms)
-          .slideX(begin: 0.2, end: 0, delay: delay, duration: 300.ms),
+          .fadeIn(delay: delay, duration: 200.ms)
+          .slideX(begin: 0.1, end: 0, delay: delay, duration: 200.ms),
     );
   }
 }
