@@ -57,6 +57,8 @@ class MainApp extends StatelessWidget {
       tertiaryContainer: Color(0xFFFFECB3),
     );
 
+    final poppinsTextTheme = GoogleFonts.poppinsTextTheme();
+
     return MaterialApp(
       theme: FlexThemeData.light(
         colors: customSchemeColor,
@@ -103,7 +105,8 @@ class MainApp extends StatelessWidget {
         visualDensity: FlexColorScheme.comfortablePlatformDensity,
         useMaterial3: true,
         swapLegacyOnMaterial3: true,
-        fontFamily: GoogleFonts.roboto().fontFamily,
+        fontFamily: GoogleFonts.poppins().fontFamily,
+        textTheme: poppinsTextTheme,
       ),
       darkTheme: FlexThemeData.dark(
         colors: customSchemeColor,
@@ -149,7 +152,8 @@ class MainApp extends StatelessWidget {
         visualDensity: FlexColorScheme.comfortablePlatformDensity,
         useMaterial3: true,
         swapLegacyOnMaterial3: true,
-        fontFamily: GoogleFonts.roboto().fontFamily,
+        fontFamily: GoogleFonts.poppins().fontFamily,
+        textTheme: poppinsTextTheme,
       ),
       themeMode: ThemeMode.system,
       home: AuthWrapper(
