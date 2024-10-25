@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/screens/dashboard_screen.dart';
 import 'package:finapp/screens/income_screen.dart';
 import 'package:finapp/screens/expense_screen.dart';
@@ -48,7 +49,11 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: _screens[_selectedIndex]
+          .animate(key: ValueKey(_selectedIndex))
+          .fadeIn(duration: 200.ms, curve: Curves.easeInOut)
+          .slideX(
+              begin: 0.02, end: 0, duration: 200.ms, curve: Curves.easeInOut),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
@@ -63,7 +68,7 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
               icon: Icon(Icons.category_rounded), label: 'Categories'),
         ],
-      ),
+      ).animate().fadeIn(duration: 300.ms, curve: Curves.easeIn),
     );
   }
 }

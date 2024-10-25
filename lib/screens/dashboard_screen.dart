@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/widgets/balance_card.dart';
@@ -20,7 +21,7 @@ class DashboardScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Piggy Bank', style: theme.textTheme.headlineSmall),
+        title: Text('Dashboard', style: theme.textTheme.headlineSmall),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout_rounded),
@@ -37,12 +38,27 @@ class DashboardScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           children: [
             Watch((context) =>
-                BalanceCard(balance: financeService.balance.value)),
+                    BalanceCard(balance: financeService.balance.value))
+                .animate()
+                .fadeIn(duration: 400.ms, curve: Curves.easeInOut)
+                .slideY(
+                    begin: 0.05,
+                    end: 0,
+                    duration: 400.ms,
+                    curve: Curves.easeOutCubic),
             const SizedBox(height: 24),
             Watch((context) => RecentTransactions(
-                  transactions: financeService.transactions,
-                  categories: financeService.categories,
-                )),
+                      transactions: financeService.transactions,
+                      categories: financeService.categories,
+                    ))
+                .animate()
+                .fadeIn(
+                    delay: 200.ms, duration: 400.ms, curve: Curves.easeInOut)
+                .slideY(
+                    begin: 0.05,
+                    end: 0,
+                    duration: 400.ms,
+                    curve: Curves.easeOutCubic),
           ],
         ),
       ),
@@ -51,7 +67,9 @@ class DashboardScreen extends StatelessWidget {
           // Navigate to AddTransactionScreen
         },
         child: const Icon(Icons.add_rounded),
-      ),
+      )
+          .animate()
+          .scale(delay: 400.ms, duration: 200.ms, curve: Curves.easeOutBack),
     );
   }
 }
