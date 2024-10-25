@@ -73,33 +73,25 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               },
             ),
             const SizedBox(height: 16),
-            Watch((context) {
-              return DropdownButtonFormField<Category>(
-                value: _selectedCategory,
-                items: widget.financeService.categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text('${category.icon} ${category.name}'),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value;
-                  });
-                },
+            InkWell(
+              onTap: _showCategoryPicker,
+              child: InputDecorator(
                 decoration: InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
-                validator: (value) {
-                  if (value == null) {
-                    return 'Please select a category';
-                  }
-                  return null;
-                },
-              );
-            }),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(_selectedCategory?.name ?? 'Select a category'),
+                    Icon(_selectedCategory != null
+                        ? Icons.check
+                        : Icons.arrow_drop_down),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _submitForm,
@@ -116,8 +108,38 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
+  void _showCategoryPicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Watch((context) {
+          return ListView.builder(
+            itemCount: widget.financeService.categories.length,
+            itemBuilder: (context, index) {
+              final category = widget.financeService.categories[index];
+              return ListTile(
+                leading:
+                    Text(category.icon, style: const TextStyle(fontSize: 24)),
+                title: Text(category.name),
+                onTap: () {
+                  setState(() {
+                    _selectedCategory = category;
+                  });
+                  Navigator.pop(context);
+                },
+              );
+            },
+          );
+        });
+      },
+    );
+  }
+
   void _submitForm() {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate() && _selectedCategory != null) {
       final newTransaction = Transaction(
         userId: widget.financeService.getCurrentUserId()!,
         type: widget.transactionType,
@@ -129,6 +151,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
       widget.financeService.addTransaction(newTransaction);
       Navigator.pop(context);
+    } else if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category')),
+      );
     }
   }
 }
