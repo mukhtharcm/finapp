@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class TransactionDetailDialog extends StatelessWidget {
   final Transaction transaction;
@@ -18,44 +19,104 @@ class TransactionDetailDialog extends StatelessWidget {
     final theme = Theme.of(context);
     final dateFormat = DateFormat('MMM d, yyyy HH:mm');
 
-    return AlertDialog(
-      title: const Text('Transaction Details'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
         children: [
-          ListTile(
-            title: const Text('Description'),
-            subtitle: Text(transaction.description),
-          ),
-          ListTile(
-            title: const Text('Amount'),
-            subtitle: Text(
-              '${transaction.type == TransactionType.expense ? '-' : '+'}\$${transaction.amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                color: transaction.type == TransactionType.expense
-                    ? theme.colorScheme.error
-                    : theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  transaction.description,
+                  style: theme.textTheme.headlineSmall,
+                  textAlign: TextAlign.center,
+                ).animate().fadeIn(duration: 300.ms, delay: 100.ms),
+                const SizedBox(height: 20),
+                _buildDetailRow(
+                  context,
+                  'Amount',
+                  '${transaction.type == TransactionType.expense ? '-' : '+'}\$${transaction.amount.toStringAsFixed(2)}',
+                  Icons.attach_money,
+                  color: transaction.type == TransactionType.expense
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.primary,
+                  delay: 200.ms,
+                ),
+                _buildDetailRow(
+                  context,
+                  'Category',
+                  category.name,
+                  Icons.category,
+                  delay: 300.ms,
+                ),
+                _buildDetailRow(
+                  context,
+                  'Date',
+                  dateFormat.format(transaction.timestamp),
+                  Icons.calendar_today,
+                  delay: 400.ms,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ).animate().fadeIn(delay: 500.ms, duration: 300.ms),
+              ],
             ),
           ),
-          ListTile(
-            title: const Text('Category'),
-            subtitle: Text('${category.icon} ${category.name}'),
-          ),
-          ListTile(
-            title: const Text('Date'),
-            subtitle: Text(dateFormat.format(transaction.timestamp)),
+          Positioned(
+            top: -40,
+            child: CircleAvatar(
+              radius: 40,
+              backgroundColor: theme.colorScheme.primaryContainer,
+              child: Text(
+                category.icon,
+                style: TextStyle(
+                    fontSize: 40, color: theme.colorScheme.onPrimaryContainer),
+              ),
+            ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack),
           ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
-        ),
-      ],
+    );
+  }
+
+  Widget _buildDetailRow(
+      BuildContext context, String label, String value, IconData icon,
+      {Color? color, Duration delay = Duration.zero}) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, color: theme.colorScheme.secondary),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: theme.textTheme.bodySmall),
+                Text(
+                  value,
+                  style: theme.textTheme.titleMedium?.copyWith(color: color),
+                ),
+              ],
+            ),
+          ),
+        ],
+      )
+          .animate()
+          .fadeIn(delay: delay, duration: 300.ms)
+          .slideX(begin: 0.2, end: 0, delay: delay, duration: 300.ms),
     );
   }
 }
