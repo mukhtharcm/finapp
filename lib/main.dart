@@ -1,5 +1,7 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io' show Platform;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:finapp/screens/auth_wrapper.dart';
 import 'package:finapp/services/auth_service.dart';
@@ -20,11 +22,11 @@ void main() async {
     initial: authData,
   );
 
+  // Determine the PocketBase URL
+  final String pocketbaseUrl = _getPocketBaseUrl();
+
   // Initialize PocketBase with the AuthStore
-  final pb = PocketBase(
-    'http://localhost:8090',
-    authStore: authStore,
-  );
+  final pb = PocketBase(pocketbaseUrl, authStore: authStore);
 
   // Initialize services
   final authService = AuthService(pb);
@@ -33,6 +35,14 @@ void main() async {
   await financeService.initialize();
 
   runApp(MainApp(authService: authService, financeService: financeService));
+}
+
+String _getPocketBaseUrl() {
+  if (Platform.isAndroid) {
+    return 'https://finbot.76545689.xyz';
+  } else {
+    return kDebugMode ? 'http://localhost:8090' : 'https://finbot.76545689.xyz';
+  }
 }
 
 class MainApp extends StatelessWidget {
