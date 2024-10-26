@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 import 'package:finapp/models/suggested_transaction.dart';
 import 'package:finapp/models/category.dart';
+import 'package:finapp/models/transaction.dart';
 
 class VoiceTransactionScreen extends StatefulWidget {
   final FinanceService financeService;
@@ -92,6 +93,16 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
           ],
         ),
       ),
+      floatingActionButton: Watch((context) {
+        if (suggestedTransactions.isNotEmpty) {
+          return FloatingActionButton.extended(
+            onPressed: _addAllTransactions,
+            icon: Icon(Icons.add_rounded),
+            label: Text('Add All'),
+          ).animate().scale(delay: 300.ms, duration: 200.ms);
+        }
+        return const SizedBox.shrink();
+      }),
     );
   }
 
@@ -169,33 +180,51 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
             (c) => c.id == transaction.categoryId,
             orElse: () => Category(name: 'Uncategorized', icon: '❓'),
           );
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor:
-                  transaction.type == SuggestedTransactionType.expense
-                      ? theme.colorScheme.errorContainer
-                      : theme.colorScheme.primaryContainer,
-              child: Text(
-                category.icon,
-                style: TextStyle(
-                  color: transaction.type == SuggestedTransactionType.expense
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.primary,
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor:
+                    transaction.type == SuggestedTransactionType.expense
+                        ? theme.colorScheme.errorContainer
+                        : theme.colorScheme.primaryContainer,
+                child: Text(
+                  category.icon,
+                  style: TextStyle(
+                    color: transaction.type == SuggestedTransactionType.expense
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.primary,
+                  ),
                 ),
               ),
-            ),
-            title: Text(transaction.description),
-            subtitle: Text(category.name),
-            trailing: Text(
-              '${transaction.type == SuggestedTransactionType.expense ? '-' : '+'}\$${transaction.amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                color: transaction.type == SuggestedTransactionType.expense
-                    ? theme.colorScheme.error
-                    : theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
+              title: Text(transaction.description),
+              subtitle: Text(category.name),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${transaction.type == SuggestedTransactionType.expense ? '-' : '+'}\$${transaction.amount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      color:
+                          transaction.type == SuggestedTransactionType.expense
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _addTransaction(transaction),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size(60, 36),
+                    ),
+                    child: Text('Add'),
+                  ),
+                ],
               ),
+              onTap: () => _editTransaction(transaction),
             ),
-            onTap: () => _editTransaction(transaction),
           );
         },
       ),
@@ -285,8 +314,45 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
     }
   }
 
+  Future<void> _addTransaction(
+      SuggestedTransaction suggestedTransaction) async {
+    final newTransaction = Transaction(
+      userId: widget.financeService.getCurrentUserId()!,
+      type: suggestedTransaction.type == SuggestedTransactionType.income
+          ? TransactionType.income
+          : TransactionType.expense,
+      amount: suggestedTransaction.amount,
+      description: suggestedTransaction.description,
+      timestamp: DateTime.now(),
+      categoryId: suggestedTransaction.categoryId,
+    );
+
+    try {
+      await widget.financeService.addTransaction(newTransaction);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Transaction added successfully')),
+      );
+      // Remove the suggested transaction from the list
+      suggestedTransactions.remove(suggestedTransaction);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add transaction: $e')),
+      );
+    }
+  }
+
   void _editTransaction(SuggestedTransaction transaction) {
     // TODO: Implement edit functionality
     // This could open a dialog or navigate to a new screen for editing
+  }
+
+  Future<void> _addAllTransactions() async {
+    for (var transaction in suggestedTransactions) {
+      await _addTransaction(transaction);
+    }
+    suggestedTransactions.clear();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('All transactions added successfully')),
+    );
   }
 }
