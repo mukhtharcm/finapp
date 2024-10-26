@@ -22,7 +22,8 @@ class DashboardScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard', style: theme.textTheme.headlineSmall),
+        title: Text('Welcome, ${authService.userName}',
+            style: theme.textTheme.headlineSmall),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout_rounded),
@@ -52,15 +53,17 @@ class DashboardScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Watch((context) =>
-                    BalanceCard(balance: financeService.balance.value))
-                .animate()
-                .fadeIn(duration: 400.ms, curve: Curves.easeInOut)
-                .slideY(
-                    begin: 0.05,
-                    end: 0,
-                    duration: 400.ms,
-                    curve: Curves.easeOutCubic),
+            Watch((context) => BalanceCard(
+                  balance: financeService.balance.value,
+                  currency: authService.preferredCurrency,
+                )
+                    .animate()
+                    .fadeIn(duration: 400.ms, curve: Curves.easeInOut)
+                    .slideY(
+                        begin: 0.05,
+                        end: 0,
+                        duration: 400.ms,
+                        curve: Curves.easeOutCubic)),
             const SizedBox(height: 24),
             Watch((context) {
               // Force rebuild when either transactions or categories change

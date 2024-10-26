@@ -60,8 +60,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     return Watch((context) {
-      if (!hasCompletedOnboarding.value) {
-        return OnboardingScreen(onComplete: _onOnboardingComplete);
+      if (isAuthenticated.value && !hasCompletedOnboarding.value) {
+        return OnboardingScreen(
+          onComplete: () {
+            setState(() {
+              hasCompletedOnboarding.value = true;
+            });
+          },
+          authService: widget.authService,
+        );
       } else if (isAuthenticated.value) {
         return MainScreen(
           authService: widget.authService,

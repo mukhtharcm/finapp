@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class BalanceCard extends StatelessWidget {
   final double balance;
+  final String currency;
 
-  const BalanceCard({super.key, required this.balance});
+  const BalanceCard({super.key, required this.balance, required this.currency});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +36,7 @@ class BalanceCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              '\$${balance.toStringAsFixed(2)}',
+              '$currency ${balance.toStringAsFixed(2)}',
               style: theme.textTheme.headlineLarge?.copyWith(
                 color: theme.colorScheme.onPrimary,
                 fontWeight: FontWeight.bold,
