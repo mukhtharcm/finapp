@@ -14,6 +14,7 @@ import 'package:finapp/models/suggested_transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/screens/edit_transaction_screen.dart';
+import 'dart:io'; // Add this import at the top of the file
 
 class VoiceTransactionScreen extends StatefulWidget {
   final FinanceService financeService;
@@ -349,16 +350,16 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
           .map((json) => SuggestedTransaction.fromJson(json))
           .toList();
 
-      // print('Suggested transactions: ${suggestedTransactions.value}');
-      // print in a readable format
-      debugPrint(suggestedTransactions.value
-          .map((t) => '${t.amount} ${t.description} ${t.categoryId} ${t.type}')
-          .join('\n'));
-
-      isProcessing.value = false;
+      // Delete the audio file after processing
+      final file = File(audioPath);
+      if (await file.exists()) {
+        await file.delete();
+        debugPrint('Deleted temporary audio file: $audioPath');
+      }
     } catch (e) {
       debugPrint('Error sending audio to server: $e');
       // TODO: Show an error message to the user
+    } finally {
       isProcessing.value = false;
     }
   }
