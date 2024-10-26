@@ -498,6 +498,7 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
       description: suggestedTransaction.description,
       timestamp: DateTime.now(),
       categoryId: suggestedTransaction.categoryId,
+      created: DateTime.now(), // Add this line
     );
 
     try {

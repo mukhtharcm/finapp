@@ -210,6 +210,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           description: _descriptionController.text,
           timestamp: DateTime.now(),
           categoryId: _selectedCategory!.id!,
+          created: DateTime.now(), // Add this line
         );
 
         await widget.financeService.addTransaction(newTransaction);

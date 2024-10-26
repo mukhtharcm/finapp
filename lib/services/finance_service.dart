@@ -38,7 +38,7 @@ class FinanceService {
     if (!isInitialized.value) await initialize();
 
     final records = await pb.collection('transactions').getFullList(
-          sort: '-timestamp', // Sort by timestamp in descending order
+          sort: '-created', // Sort by created field in descending order
           expand: 'category',
         );
     transactions.value =
@@ -90,7 +90,7 @@ class FinanceService {
       }
 
       // Re-sort transactions after any change
-      transactions.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      transactions.sort((a, b) => b.created.compareTo(a.created));
     });
   }
 

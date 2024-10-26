@@ -10,6 +10,7 @@ class Transaction {
   final String description;
   final DateTime timestamp;
   final String categoryId;
+  final DateTime created;
 
   Transaction({
     this.id,
@@ -19,6 +20,7 @@ class Transaction {
     required this.description,
     required this.timestamp,
     required this.categoryId,
+    required this.created,
   });
 
   factory Transaction.fromRecord(RecordModel record) {
@@ -32,6 +34,7 @@ class Transaction {
       description: record.getStringValue('description'),
       timestamp: DateTime.parse(record.getStringValue('timestamp')),
       categoryId: record.getStringValue('category'),
+      created: DateTime.parse(record.created), // Parse the string to DateTime
     );
   }
 
@@ -43,6 +46,7 @@ class Transaction {
       'description': description,
       'timestamp': timestamp.toIso8601String(),
       'category': categoryId,
+      // Note: We don't need to include 'created' in toJson as it's automatically handled by PocketBase
     };
   }
 }
