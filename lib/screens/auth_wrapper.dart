@@ -39,6 +39,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   void _listenToAuthChanges() {
+    isAuthenticated.value = widget.authService.isAuthenticated;
     effect(() {
       widget.authService.authStateChanges.listen((event) {
         isAuthenticated.value = widget.authService.isAuthenticated;
