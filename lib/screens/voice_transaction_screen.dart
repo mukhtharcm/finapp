@@ -25,7 +25,8 @@ class VoiceTransactionScreen extends StatefulWidget {
   _VoiceTransactionScreenState createState() => _VoiceTransactionScreenState();
 }
 
-class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
+class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
+    with SingleTickerProviderStateMixin {
   final isRecording = signal(false);
   final isProcessing = signal(false);
   final recordingDuration = signal(0);
@@ -33,16 +34,24 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
   Timer? _timer;
   late AudioRecorder _audioRecorder;
 
+  late AnimationController _addingController;
+  final Map<SuggestedTransaction, bool> _addingStatus = {};
+
   @override
   void initState() {
     super.initState();
     _audioRecorder = AudioRecorder();
+    _addingController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     _audioRecorder.dispose();
+    _addingController.dispose();
     super.dispose();
   }
 
@@ -181,67 +190,93 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
           final category = _findCategory(transaction.categoryId);
           final bool isValidCategory = category != null;
 
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: isValidCategory
-                    ? (transaction.type == SuggestedTransactionType.expense
-                        ? theme.colorScheme.errorContainer
-                        : theme.colorScheme.primaryContainer)
-                    : theme.colorScheme.errorContainer,
-                child: Text(
-                  isValidCategory ? category.icon : '!',
-                  style: TextStyle(
-                    color: isValidCategory
-                        ? (transaction.type == SuggestedTransactionType.expense
-                            ? theme.colorScheme.onErrorContainer
-                            : theme.colorScheme.onPrimaryContainer)
-                        : theme.colorScheme.error,
+          return AnimatedBuilder(
+            animation: _addingController,
+            builder: (context, child) {
+              return Opacity(
+                opacity: _addingStatus[transaction] == true
+                    ? 1.0 - _addingController.value
+                    : 1.0,
+                child: child,
+              );
+            },
+            child: Card(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: isValidCategory
+                      ? (transaction.type == SuggestedTransactionType.expense
+                          ? theme.colorScheme.errorContainer
+                          : theme.colorScheme.primaryContainer)
+                      : theme.colorScheme.errorContainer,
+                  child: Text(
+                    isValidCategory ? category.icon : '!',
+                    style: TextStyle(
+                      color: isValidCategory
+                          ? (transaction.type ==
+                                  SuggestedTransactionType.expense
+                              ? theme.colorScheme.onErrorContainer
+                              : theme.colorScheme.onPrimaryContainer)
+                          : theme.colorScheme.error,
+                    ),
                   ),
                 ),
-              ),
-              title: Text(transaction.description),
-              subtitle:
-                  Text(isValidCategory ? category.name : 'Invalid Category'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${transaction.type == SuggestedTransactionType.expense ? '-' : '+'}\$${transaction.amount.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      color:
-                          transaction.type == SuggestedTransactionType.expense
-                              ? theme.colorScheme.error
-                              : theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+                title: Text(transaction.description),
+                subtitle:
+                    Text(isValidCategory ? category.name : 'Invalid Category'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${transaction.type == SuggestedTransactionType.expense ? '-' : '+'}\$${transaction.amount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color:
+                            transaction.type == SuggestedTransactionType.expense
+                                ? theme.colorScheme.error
+                                : theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: isValidCategory
-                        ? () => _addTransaction(transaction)
-                        : () => _showInvalidCategoryDialog(transaction),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      minimumSize: Size(60, 36),
-                      backgroundColor: isValidCategory
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.error,
-                      foregroundColor: isValidCategory
-                          ? theme.colorScheme.onPrimary
-                          : theme.colorScheme.onError,
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: isValidCategory
+                          ? () => _addTransaction(transaction)
+                          : () => _showInvalidCategoryDialog(transaction),
+                      style: ElevatedButton.styleFrom(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size(60, 36),
+                        backgroundColor: isValidCategory
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.error,
+                        foregroundColor: isValidCategory
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.onError,
+                      ),
+                      child: _addingStatus[transaction] == true
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isValidCategory
+                                      ? theme.colorScheme.onPrimary
+                                      : theme.colorScheme.onError,
+                                ),
+                              ),
+                            )
+                          : Text(isValidCategory ? 'Add' : 'Fix'),
                     ),
-                    child: Text(isValidCategory ? 'Add' : 'Fix'),
-                  ),
-                ],
+                  ],
+                ),
+                onTap: () => _editTransaction(transaction),
               ),
-              onTap: () => _editTransaction(transaction),
             ),
-          );
+          ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
         },
       ),
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
+    );
   }
 
   Category? _findCategory(String categoryId) {
@@ -366,18 +401,38 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
 
   Future<void> _addTransaction(
       SuggestedTransaction suggestedTransaction) async {
+    setState(() {
+      _addingStatus[suggestedTransaction] = true;
+    });
+
     try {
       await _addTransactionWithoutSnackbar(suggestedTransaction);
+
+      // Start the fade-out animation
+      await _addingController.forward();
+
+      setState(() {
+        suggestedTransactions.remove(suggestedTransaction);
+        _addingStatus.remove(suggestedTransaction);
+      });
+
+      _addingController.reset();
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Transaction added successfully')),
+        SnackBar(
+          content: Text('Transaction added successfully'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
       );
-      // Remove the suggested transaction from the list
-      suggestedTransactions.value = suggestedTransactions
-          .where((t) => t != suggestedTransaction)
-          .toList();
     } catch (e) {
+      setState(() {
+        _addingStatus[suggestedTransaction] = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add transaction: $e')),
+        SnackBar(
+          content: Text('Failed to add transaction: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     }
   }
