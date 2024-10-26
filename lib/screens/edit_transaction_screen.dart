@@ -24,7 +24,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   late TextEditingController _descriptionController;
   late TextEditingController _amountController;
   late SuggestedTransactionType _transactionType;
-  late String _categoryId;
+  String? _categoryId;
 
   @override
   void initState() {
@@ -34,7 +34,13 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     _amountController =
         TextEditingController(text: widget.transaction.amount.toString());
     _transactionType = widget.transaction.type;
-    _categoryId = widget.transaction.categoryId;
+    _categoryId = _findValidCategoryId(widget.transaction.categoryId);
+  }
+
+  String? _findValidCategoryId(String categoryId) {
+    return widget.financeService.categories.any((c) => c.id == categoryId)
+        ? categoryId
+        : null;
   }
 
   @override
@@ -124,24 +130,29 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         DropdownButtonFormField<String>(
           value: _categoryId,
           onChanged: (String? newValue) {
-            if (newValue != null) {
-              setState(() {
-                _categoryId = newValue;
-              });
-            }
+            setState(() {
+              _categoryId = newValue;
+            });
           },
-          items: widget.financeService.categories.map((Category category) {
-            return DropdownMenuItem<String>(
-              value: category.id,
-              child: Row(
-                children: [
-                  Text(category.icon),
-                  SizedBox(width: 8),
-                  Text(category.name),
-                ],
-              ),
-            );
-          }).toList(),
+          items: [
+            DropdownMenuItem<String>(
+              value: null,
+              child: Text('Select a category',
+                  style: TextStyle(color: theme.hintColor)),
+            ),
+            ...widget.financeService.categories.map((Category category) {
+              return DropdownMenuItem<String>(
+                value: category.id,
+                child: Row(
+                  children: [
+                    Text(category.icon),
+                    SizedBox(width: 8),
+                    Text(category.name),
+                  ],
+                ),
+              );
+            }),
+          ],
           decoration: InputDecoration(
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -164,9 +175,8 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         onPressed: _saveChanges,
         style: ElevatedButton.styleFrom(
           padding: EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: Text('Save Changes', style: theme.textTheme.titleMedium),
       ),
@@ -177,10 +187,17 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   }
 
   void _saveChanges() {
+    if (_categoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select a valid category')),
+      );
+      return;
+    }
+
     final editedTransaction = SuggestedTransaction(
       amount: double.parse(_amountController.text),
       description: _descriptionController.text,
-      categoryId: _categoryId,
+      categoryId: _categoryId!,
       type: _transactionType,
     );
 

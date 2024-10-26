@@ -26,14 +26,17 @@ class RecentTransactions extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Watch((context) {
+          // Watch both transactions and categories
           final transactionList = transactions.toList();
+          final categoryList = categories.toList();
+
           return ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: transactionList.length > 5 ? 5 : transactionList.length,
             itemBuilder: (context, index) {
               final transaction = transactionList[index];
-              final category = categories.firstWhere(
+              final category = categoryList.firstWhere(
                 (c) => c.id == transaction.categoryId,
                 orElse: () => Category(name: 'Uncategorized', icon: '❓'),
               );

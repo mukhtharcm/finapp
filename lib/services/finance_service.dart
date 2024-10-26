@@ -22,8 +22,12 @@ class FinanceService {
     }
 
     // Set up realtime subscriptions
-    _subscribeToTransactions();
     _subscribeToCategories();
+    _subscribeToTransactions();
+
+    // Fetch categories first, then transactions
+    await fetchCategories();
+    await fetchTransactions();
   }
 
   String? getCurrentUserId() {
@@ -57,9 +61,9 @@ class FinanceService {
   Future<void> addTransaction(Transaction transaction) async {
     if (!isInitialized.value) await initialize();
 
-    final record =
-        await pb.collection('transactions').create(body: transaction.toJson());
-    transactions.add(Transaction.fromRecord(record));
+    await pb.collection('transactions').create(body: transaction.toJson());
+    // Remove the manual addition of the transaction to the list
+    // The realtime subscription will handle adding the new transaction
   }
 
   Future<void> addCategory(Category category) async {

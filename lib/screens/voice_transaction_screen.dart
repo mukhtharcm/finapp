@@ -177,29 +177,32 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
         itemCount: suggestedTransactions.length,
         itemBuilder: (context, index) {
           final transaction = suggestedTransactions[index];
-          final category = widget.financeService.categories.firstWhere(
-            (c) => c.id == transaction.categoryId,
-            orElse: () => Category(name: 'Uncategorized', icon: '❓'),
-          );
+          final category = _findCategory(transaction.categoryId);
+          final bool isValidCategory = category != null;
+
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor:
-                    transaction.type == SuggestedTransactionType.expense
+                backgroundColor: isValidCategory
+                    ? (transaction.type == SuggestedTransactionType.expense
                         ? theme.colorScheme.errorContainer
-                        : theme.colorScheme.primaryContainer,
+                        : theme.colorScheme.primaryContainer)
+                    : theme.colorScheme.errorContainer,
                 child: Text(
-                  category.icon,
+                  isValidCategory ? category.icon : '!',
                   style: TextStyle(
-                    color: transaction.type == SuggestedTransactionType.expense
-                        ? theme.colorScheme.error
-                        : theme.colorScheme.primary,
+                    color: isValidCategory
+                        ? (transaction.type == SuggestedTransactionType.expense
+                            ? theme.colorScheme.onErrorContainer
+                            : theme.colorScheme.onPrimaryContainer)
+                        : theme.colorScheme.error,
                   ),
                 ),
               ),
               title: Text(transaction.description),
-              subtitle: Text(category.name),
+              subtitle:
+                  Text(isValidCategory ? category.name : 'Invalid Category'),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -215,12 +218,20 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    onPressed: () => _addTransaction(transaction),
+                    onPressed: isValidCategory
+                        ? () => _addTransaction(transaction)
+                        : () => _showInvalidCategoryDialog(transaction),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       minimumSize: Size(60, 36),
+                      backgroundColor: isValidCategory
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.error,
+                      foregroundColor: isValidCategory
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onError,
                     ),
-                    child: Text('Add'),
+                    child: Text(isValidCategory ? 'Add' : 'Fix'),
                   ),
                 ],
               ),
@@ -230,6 +241,43 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
         },
       ),
     ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Category? _findCategory(String categoryId) {
+    try {
+      return widget.financeService.categories
+          .firstWhere((c) => c.id == categoryId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  void _showInvalidCategoryDialog(SuggestedTransaction transaction) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Invalid Category'),
+          content: Text(
+              'The suggested category for this transaction is invalid. Please edit the transaction to select a valid category.'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Edit'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _editTransaction(transaction);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _startRecording() async {
@@ -396,6 +444,16 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
       categoryId: suggestedTransaction.categoryId,
     );
 
-    await widget.financeService.addTransaction(newTransaction);
+    try {
+      await widget.financeService.addTransaction(newTransaction);
+      // The transaction has been added successfully, but we don't need to do anything here
+      // The realtime subscription will update the UI
+    } catch (e) {
+      // If there's an error, we might want to show it to the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add transaction: $e')),
+      );
+      rethrow; // Re-throw the error so the calling method knows the operation failed
+    }
   }
 }

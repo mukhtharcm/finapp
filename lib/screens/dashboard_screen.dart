@@ -46,8 +46,8 @@ class DashboardScreen extends StatelessWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await financeService.fetchTransactions();
           await financeService.fetchCategories();
+          await financeService.fetchTransactions();
         },
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -62,10 +62,15 @@ class DashboardScreen extends StatelessWidget {
                     duration: 400.ms,
                     curve: Curves.easeOutCubic),
             const SizedBox(height: 24),
-            Watch((context) => RecentTransactions(
-                      transactions: financeService.transactions,
-                      categories: financeService.categories,
-                    ))
+            Watch((context) {
+              // Force rebuild when either transactions or categories change
+              financeService.transactions.length;
+              financeService.categories.length;
+              return RecentTransactions(
+                transactions: financeService.transactions,
+                categories: financeService.categories,
+              );
+            })
                 .animate()
                 .fadeIn(
                     delay: 200.ms, duration: 400.ms, curve: Curves.easeInOut)
@@ -77,6 +82,14 @@ class DashboardScreen extends StatelessWidget {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navigate to AddTransactionScreen
+        },
+        child: const Icon(Icons.add_rounded),
+      )
+          .animate()
+          .scale(delay: 400.ms, duration: 200.ms, curve: Curves.easeOutBack),
     );
   }
 
