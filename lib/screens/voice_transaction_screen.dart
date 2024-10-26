@@ -13,6 +13,7 @@ import 'dart:convert';
 import 'package:finapp/models/suggested_transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:finapp/models/transaction.dart';
+import 'package:finapp/screens/edit_transaction_screen.dart';
 
 class VoiceTransactionScreen extends StatefulWidget {
   final FinanceService financeService;
@@ -342,8 +343,21 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
   }
 
   void _editTransaction(SuggestedTransaction transaction) {
-    // TODO: Implement edit functionality
-    // This could open a dialog or navigate to a new screen for editing
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTransactionScreen(
+          transaction: transaction,
+          financeService: widget.financeService,
+          onEdit: (editedTransaction) {
+            int index = suggestedTransactions.indexOf(transaction);
+            if (index != -1) {
+              suggestedTransactions[index] = editedTransaction;
+            }
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _addAllTransactions() async {
