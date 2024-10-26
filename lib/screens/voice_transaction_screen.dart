@@ -317,24 +317,15 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
 
   Future<void> _addTransaction(
       SuggestedTransaction suggestedTransaction) async {
-    final newTransaction = Transaction(
-      userId: widget.financeService.getCurrentUserId()!,
-      type: suggestedTransaction.type == SuggestedTransactionType.income
-          ? TransactionType.income
-          : TransactionType.expense,
-      amount: suggestedTransaction.amount,
-      description: suggestedTransaction.description,
-      timestamp: DateTime.now(),
-      categoryId: suggestedTransaction.categoryId,
-    );
-
     try {
-      await widget.financeService.addTransaction(newTransaction);
+      await _addTransactionWithoutSnackbar(suggestedTransaction);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Transaction added successfully')),
       );
       // Remove the suggested transaction from the list
-      suggestedTransactions.remove(suggestedTransaction);
+      suggestedTransactions.value = suggestedTransactions
+          .where((t) => t != suggestedTransaction)
+          .toList();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add transaction: $e')),
@@ -361,12 +352,50 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
   }
 
   Future<void> _addAllTransactions() async {
-    for (var transaction in suggestedTransactions) {
-      await _addTransaction(transaction);
+    final transactionsToAdd =
+        List<SuggestedTransaction>.from(suggestedTransactions);
+    int successCount = 0;
+    int failCount = 0;
+
+    for (var transaction in transactionsToAdd) {
+      try {
+        await _addTransactionWithoutSnackbar(transaction);
+        successCount++;
+      } catch (e) {
+        failCount++;
+        debugPrint('Failed to add transaction: $e');
+      }
     }
+
     suggestedTransactions.clear();
+
+    String message;
+    if (failCount == 0) {
+      message = 'All transactions added successfully';
+    } else if (successCount == 0) {
+      message = 'Failed to add any transactions';
+    } else {
+      message = '$successCount transactions added, $failCount failed';
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('All transactions added successfully')),
+      SnackBar(content: Text(message)),
     );
+  }
+
+  Future<void> _addTransactionWithoutSnackbar(
+      SuggestedTransaction suggestedTransaction) async {
+    final newTransaction = Transaction(
+      userId: widget.financeService.getCurrentUserId()!,
+      type: suggestedTransaction.type == SuggestedTransactionType.income
+          ? TransactionType.income
+          : TransactionType.expense,
+      amount: suggestedTransaction.amount,
+      description: suggestedTransaction.description,
+      timestamp: DateTime.now(),
+      categoryId: suggestedTransaction.categoryId,
+    );
+
+    await widget.financeService.addTransaction(newTransaction);
   }
 }
