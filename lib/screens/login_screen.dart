@@ -145,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account?"),
+                  Text("Don't have an account?"),
                   TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -156,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       );
                     },
-                    child: const Text('Sign Up'),
+                    child: Text('Sign Up'),
                   ),
                 ],
               ).animate().fadeIn(delay: 1400.ms, duration: 600.ms),

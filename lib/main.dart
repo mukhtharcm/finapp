@@ -9,48 +9,16 @@ import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:finapp/service_locator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Set up AuthStore
-  const storage = FlutterSecureStorage();
-  final authData = await storage.read(key: 'pb_auth');
-
-  final authStore = AsyncAuthStore(
-    save: (String data) async =>
-        await storage.write(key: 'pb_auth', value: data),
-    initial: authData,
-  );
-
-  // Determine the PocketBase URL
-  final String pocketbaseUrl = _getPocketBaseUrl();
-
-  // Initialize PocketBase with the AuthStore
-  final pb = PocketBase(pocketbaseUrl, authStore: authStore);
-
-  // Initialize services
-  final authService = AuthService(pb);
-  final financeService = FinanceService(pb);
-
-  await financeService.initialize();
-
-  runApp(MainApp(authService: authService, financeService: financeService));
+  await setupServiceLocator();
+  runApp(const MyApp());
 }
 
-String _getPocketBaseUrl() {
-  return kDebugMode ? 'https://pb.76545689.xyz' : 'https://finbot.76545689.xyz';
-}
-
-class MainApp extends StatelessWidget {
-  final AuthService authService;
-  final FinanceService financeService;
-
-  const MainApp({
-    super.key,
-    required this.authService,
-    required this.financeService,
-  });
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +35,7 @@ class MainApp extends StatelessWidget {
     final poppinsTextTheme = GoogleFonts.poppinsTextTheme();
 
     return MaterialApp(
+      title: 'FinApp',
       debugShowCheckedModeBanner: false, // Remove debug banner
       theme: FlexThemeData.light(
         colors: customSchemeColor,
@@ -164,10 +133,7 @@ class MainApp extends StatelessWidget {
         textTheme: poppinsTextTheme,
       ),
       themeMode: ThemeMode.system,
-      home: AuthWrapper(
-        authService: authService,
-        financeService: financeService,
-      ),
+      home: const AuthWrapper(),
     );
   }
 }

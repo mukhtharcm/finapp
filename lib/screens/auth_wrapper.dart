@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:finapp/screens/login_screen.dart';
 import 'package:finapp/screens/main_screen.dart';
@@ -8,20 +9,15 @@ import 'package:finapp/services/finance_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthWrapper extends StatefulWidget {
-  final AuthService authService;
-  final FinanceService financeService;
-
-  const AuthWrapper({
-    super.key,
-    required this.authService,
-    required this.financeService,
-  });
+  const AuthWrapper({super.key});
 
   @override
   _AuthWrapperState createState() => _AuthWrapperState();
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
+  final AuthService _authService = GetIt.instance<AuthService>();
+  final FinanceService _financeService = GetIt.instance<FinanceService>();
   final isAuthenticated = signal(false);
   final hasCompletedOnboarding = signal(false);
 
@@ -39,13 +35,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   void _listenToAuthChanges() {
-    isAuthenticated.value = widget.authService.isAuthenticated;
+    isAuthenticated.value = _authService.isAuthenticated;
     effect(() {
-      widget.authService.authStateChanges.listen((event) {
-        isAuthenticated.value = widget.authService.isAuthenticated;
+      _authService.authStateChanges.listen((event) {
+        isAuthenticated.value = _authService.isAuthenticated;
         if (isAuthenticated.value) {
-          widget.financeService.fetchCategories();
-          widget.financeService.fetchTransactions();
+          _financeService.fetchCategories();
+          _financeService.fetchTransactions();
         }
       });
     });
@@ -62,20 +58,16 @@ class _AuthWrapperState extends State<AuthWrapper> {
     return Watch((context) {
       if (isAuthenticated.value && !hasCompletedOnboarding.value) {
         return OnboardingScreen(
-          onComplete: () {
-            setState(() {
-              hasCompletedOnboarding.value = true;
-            });
-          },
-          authService: widget.authService,
+          onComplete: _onOnboardingComplete,
+          authService: _authService,
         );
       } else if (isAuthenticated.value) {
         return MainScreen(
-          authService: widget.authService,
-          financeService: widget.financeService,
+          authService: _authService,
+          financeService: _financeService,
         );
       } else {
-        return LoginScreen(authService: widget.authService);
+        return LoginScreen(authService: _authService);
       }
     });
   }

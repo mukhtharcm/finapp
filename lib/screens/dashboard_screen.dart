@@ -54,16 +54,16 @@ class DashboardScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           children: [
             Watch((context) => BalanceCard(
-                  balance: financeService.balance.value,
-                  currency: authService.preferredCurrency,
-                )
-                    .animate()
-                    .fadeIn(duration: 400.ms, curve: Curves.easeInOut)
-                    .slideY(
-                        begin: 0.05,
-                        end: 0,
-                        duration: 400.ms,
-                        curve: Curves.easeOutCubic)),
+                      balance: financeService.balance.value,
+                      currency: authService.preferredCurrency,
+                    ))
+                .animate()
+                .fadeIn(duration: 400.ms, curve: Curves.easeInOut)
+                .slideY(
+                    begin: 0.05,
+                    end: 0,
+                    duration: 400.ms,
+                    curve: Curves.easeOutCubic),
             const SizedBox(height: 24),
             Watch((context) {
               // Force rebuild when either transactions or categories change
