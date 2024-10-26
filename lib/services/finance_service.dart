@@ -78,6 +78,9 @@ class FinanceService {
     pb.collection('transactions').subscribe('*', (e) {
       if (e.record == null) return; // Skip if record is null
 
+      // print the action of the event
+      debugPrint('Transaction event: ${e.action}');
+
       if (e.action == 'create') {
         transactions.add(Transaction.fromRecord(e.record!));
       } else if (e.action == 'update') {

@@ -29,12 +29,10 @@ Future<void> setupServiceLocator() async {
         authStore: authStore,
       ));
 
-  // Register AuthService
-  getIt.registerLazySingleton(() => AuthService(getIt<PocketBase>()));
+  final authService = AuthService(getIt<PocketBase>());
+  getIt.registerLazySingleton(() => authService);
 
-  // Register FinanceService
-  getIt.registerLazySingleton(() => FinanceService(getIt<PocketBase>()));
-
-  // initialize services
-  getIt<FinanceService>().initialize();
+  final financeService = FinanceService(getIt<PocketBase>());
+  await financeService.initialize();
+  getIt.registerLazySingleton(() => financeService);
 }

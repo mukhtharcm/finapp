@@ -35,6 +35,7 @@ class AuthService {
 
   Future<void> logout() async {
     _pb.authStore.clear();
+    await _pb.realtime.unsubscribe();
   }
 
   Future<void> updateUserProfile(
