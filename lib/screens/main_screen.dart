@@ -4,6 +4,7 @@ import 'package:finapp/screens/dashboard_screen.dart';
 import 'package:finapp/screens/income_screen.dart';
 import 'package:finapp/screens/expense_screen.dart';
 import 'package:finapp/screens/categories_screen.dart';
+import 'package:finapp/screens/voice_transaction_screen.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
 
@@ -50,7 +51,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_selectedIndex]
-          .animate(key: ValueKey(_selectedIndex))
+          .animate()
           .fadeIn(duration: 200.ms, curve: Curves.easeInOut)
           .slideX(
               begin: 0.02, end: 0, duration: 200.ms, curve: Curves.easeInOut),
@@ -69,6 +70,21 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(Icons.category_rounded), label: 'Categories'),
         ],
       ).animate().fadeIn(duration: 300.ms, curve: Curves.easeIn),
+      floatingActionButton: FloatingActionButton.large(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  VoiceTransactionScreen(financeService: widget.financeService),
+            ),
+          );
+        },
+        child: const Icon(Icons.mic),
+      )
+          .animate()
+          .scale(delay: 400.ms, duration: 200.ms, curve: Curves.easeOutBack),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }
