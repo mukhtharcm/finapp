@@ -77,14 +77,6 @@ class DashboardScreen extends StatelessWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to AddTransactionScreen
-        },
-        child: const Icon(Icons.add_rounded),
-      )
-          .animate()
-          .scale(delay: 400.ms, duration: 200.ms, curve: Curves.easeOutBack),
     );
   }
 

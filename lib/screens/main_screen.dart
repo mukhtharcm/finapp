@@ -70,7 +70,13 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(Icons.category_rounded), label: 'Categories'),
         ],
       ).animate().fadeIn(duration: 300.ms, curve: Curves.easeIn),
-      floatingActionButton: FloatingActionButton.large(
+      floatingActionButton: FloatingActionButton(
+        // mini: true,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(100),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         onPressed: () {
           Navigator.push(
             context,
@@ -80,11 +86,11 @@ class _MainScreenState extends State<MainScreen> {
             ),
           );
         },
-        child: const Icon(Icons.mic),
+        child: const Icon(Icons.auto_awesome),
       )
           .animate()
           .scale(delay: 400.ms, duration: 200.ms, curve: Curves.easeOutBack),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

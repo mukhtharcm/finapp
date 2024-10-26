@@ -1,7 +1,5 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:io' show Platform;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:finapp/screens/auth_wrapper.dart';
 import 'package:finapp/services/auth_service.dart';
