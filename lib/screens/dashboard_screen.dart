@@ -5,6 +5,7 @@ import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/widgets/balance_card.dart';
 import 'package:finapp/widgets/recent_transactions.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardScreen extends StatelessWidget {
   final AuthService authService;
@@ -26,6 +27,20 @@ class DashboardScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout_rounded),
             onPressed: () => authService.logout(),
+          ),
+          // Add dev mode menu
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'reset_onboarding') {
+                await _resetOnboarding(context);
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'reset_onboarding',
+                child: Text('Reset Onboarding (Dev)'),
+              ),
+            ],
           ),
         ],
       ),
@@ -70,6 +85,15 @@ class DashboardScreen extends StatelessWidget {
       )
           .animate()
           .scale(delay: 400.ms, duration: 200.ms, curve: Curves.easeOutBack),
+    );
+  }
+
+  Future<void> _resetOnboarding(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasCompletedOnboarding', false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content: Text('Onboarding reset. Restart the app to see changes.')),
     );
   }
 }

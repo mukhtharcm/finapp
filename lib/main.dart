@@ -60,6 +60,7 @@ class MainApp extends StatelessWidget {
     final poppinsTextTheme = GoogleFonts.poppinsTextTheme();
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false, // Remove debug banner
       theme: FlexThemeData.light(
         colors: customSchemeColor,
         surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
