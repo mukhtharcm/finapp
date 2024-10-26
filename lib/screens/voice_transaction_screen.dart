@@ -8,9 +8,7 @@ import 'package:signals/signals_flutter.dart';
 import 'dart:async';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 // import 'package:http/http.dart' as http;
-import 'package:pocketbase/pocketbase.dart';
 import 'dart:convert';
 import 'package:finapp/models/suggested_transaction.dart';
 import 'package:finapp/models/category.dart';
@@ -31,7 +29,6 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
   final suggestedTransactions = ListSignal<SuggestedTransaction>([]);
   Timer? _timer;
   late AudioRecorder _audioRecorder;
-  String? _recordingPath;
 
   @override
   void initState() {
@@ -212,7 +209,6 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
         final path =
             '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
         await _audioRecorder.start(RecordConfig(), path: path);
-        _recordingPath = path; // Assign the path after successful start
 
         isRecording.value = true;
         recordingDuration.value = 0;
@@ -221,7 +217,7 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
         });
       }
     } catch (e) {
-      print('Error starting recording: $e');
+      debugPrint('Error starting recording: $e');
     }
   }
 
@@ -237,11 +233,11 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
       if (path != null) {
         await _processAudio(path);
       } else {
-        print('Recording failed: no audio file was created.');
+        debugPrint('Recording failed: no audio file was created.');
         // TODO: Show an error message to the user
       }
     } catch (e) {
-      print('Error stopping recording: $e');
+      debugPrint('Error stopping recording: $e');
     } finally {
       isProcessing.value = false;
     }

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:signals/signals.dart';
 import 'package:finapp/models/transaction.dart';
@@ -17,7 +18,7 @@ class FinanceService {
       await pb.collection('users').authRefresh();
     } catch (e) {
       // If refresh fails, it means there's no valid auth state
-      print('Auth refresh failed: $e');
+      debugPrint('Auth refresh failed: $e');
     } finally {
       isInitialized.value = true;
     }
