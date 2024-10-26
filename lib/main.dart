@@ -39,11 +39,7 @@ void main() async {
 }
 
 String _getPocketBaseUrl() {
-  if (Platform.isAndroid) {
-    return 'https://finbot.76545689.xyz';
-  } else {
-    return kDebugMode ? 'http://localhost:8090' : 'https://finbot.76545689.xyz';
-  }
+  return kDebugMode ? 'https://pb.76545689.xyz' : 'https://finbot.76545689.xyz';
 }
 
 class MainApp extends StatelessWidget {
