@@ -4,17 +4,17 @@ import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
 
 class FinanceService {
-  final PocketBase _pb;
+  final PocketBase pb;
   final transactions = ListSignal<Transaction>([]);
   final categories = ListSignal<Category>([]);
   final isInitialized = signal(false);
 
-  FinanceService(this._pb);
+  FinanceService(this.pb);
 
   Future<void> initialize() async {
     try {
       // Attempt to refresh the auth state
-      await _pb.collection('users').authRefresh();
+      await pb.collection('users').authRefresh();
     } catch (e) {
       // If refresh fails, it means there's no valid auth state
       print('Auth refresh failed: $e');
@@ -24,13 +24,13 @@ class FinanceService {
   }
 
   String? getCurrentUserId() {
-    return _pb.authStore.model?.id;
+    return pb.authStore.model?.id;
   }
 
   Future<void> fetchTransactions() async {
     if (!isInitialized.value) await initialize();
 
-    final records = await _pb.collection('transactions').getFullList(
+    final records = await pb.collection('transactions').getFullList(
           sort: '-timestamp',
           expand: 'category',
         );
@@ -44,7 +44,7 @@ class FinanceService {
     final userId = getCurrentUserId();
     String filter = userId != null ? 'user = "$userId"' : '';
 
-    final records = await _pb.collection('user_categories').getFullList(
+    final records = await pb.collection('user_categories').getFullList(
           filter: filter,
         );
     categories.value =
@@ -55,7 +55,7 @@ class FinanceService {
     if (!isInitialized.value) await initialize();
 
     final record =
-        await _pb.collection('transactions').create(body: transaction.toJson());
+        await pb.collection('transactions').create(body: transaction.toJson());
     transactions.add(Transaction.fromRecord(record));
   }
 
@@ -63,7 +63,7 @@ class FinanceService {
     if (!isInitialized.value) await initialize();
 
     final record =
-        await _pb.collection('user_categories').create(body: category.toJson());
+        await pb.collection('user_categories').create(body: category.toJson());
     categories.add(Category.fromRecord(record));
   }
 

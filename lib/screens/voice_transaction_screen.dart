@@ -1,8 +1,16 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+// import 'package:http/http.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:signals/signals_flutter.dart';
 import 'dart:async';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+// import 'package:http/http.dart' as http;
+import 'package:pocketbase/pocketbase.dart';
 
 class VoiceTransactionScreen extends StatefulWidget {
   final FinanceService financeService;
@@ -18,10 +26,19 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
   final isProcessing = signal(false);
   final recordingDuration = signal(0);
   Timer? _timer;
+  late AudioRecorder _audioRecorder;
+  String? _recordingPath;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioRecorder = AudioRecorder();
+  }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _audioRecorder.dispose();
     super.dispose();
   }
 
@@ -136,27 +153,104 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
     ).animate().fadeIn(duration: 300.ms);
   }
 
-  void _startRecording() {
-    isRecording.value = true;
-    recordingDuration.value = 0;
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      recordingDuration.value++;
-    });
-    // TODO: Implement actual recording logic
+  Future<void> _startRecording() async {
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        final directory = await getTemporaryDirectory();
+        final path =
+            '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        await _audioRecorder.start(RecordConfig(), path: path);
+        _recordingPath = path; // Assign the path after successful start
+
+        isRecording.value = true;
+        recordingDuration.value = 0;
+        _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          recordingDuration.value++;
+        });
+      }
+    } catch (e) {
+      print('Error starting recording: $e');
+    }
   }
 
-  void _stopRecording() async {
+  Future<void> _stopRecording() async {
     if (!isRecording.value) return;
 
-    isRecording.value = false;
-    _timer?.cancel();
-    isProcessing.value = true;
+    try {
+      isRecording.value = false;
+      _timer?.cancel();
+      final path = await _audioRecorder.stop();
+      isProcessing.value = true;
 
-    // TODO: Implement actual recording stop and processing logic
-    await Future.delayed(
-        const Duration(seconds: 2)); // Simulating processing time
+      if (path != null) {
+        await _processAudio(path);
+      } else {
+        print('Recording failed: no audio file was created.');
+        // TODO: Show an error message to the user
+      }
+    } catch (e) {
+      print('Error stopping recording: $e');
+    } finally {
+      isProcessing.value = false;
+    }
+  }
 
-    isProcessing.value = false;
-    // TODO: Navigate to suggestion screen
+  Future<void> _processAudio(String audioPath) async {
+    try {
+      // final audioFile = File(audioPath);
+
+      // MultipartFile file = await MultipartFile.fromF
+
+      // final formData = {
+      //   'audio': MultipartFile.fromString(
+      //     audioString,
+      //     'audio.m4a',
+      //     contentType: MediaType('audio', 'm4a'),
+      //   ),
+      // };
+
+      // final pb = widget.financeService.pb;
+
+      // final res = await pb.send(
+      //   '/app/api/process-audio',
+      //   method: 'POST',
+      //   body: formData,
+      // );
+
+      // print('Server response: $res');
+      // // TODO: Handle the server response and navigate to a results screen
+
+      final pb = widget.financeService.pb;
+
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: pb.baseUrl,
+        ),
+      );
+
+      FormData formData = FormData.fromMap({
+        'audio': await MultipartFile.fromFile(
+          audioPath,
+          filename: 'audio.m4a',
+          contentType: MediaType('audio', 'm4a'),
+        ),
+      });
+
+      final res = await dio.post(
+        '/app/api/process-audio',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${pb.authStore.token}',
+          },
+        ),
+      );
+
+      print('Server response: $res');
+      // TODO: Handle the server response and navigate to a results screen
+    } catch (e) {
+      print('Error sending audio to server: $e');
+      // TODO: Show an error message to the user
+    }
   }
 }

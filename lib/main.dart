@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:finapp/screens/auth_wrapper.dart';
@@ -36,11 +39,11 @@ void main() async {
 }
 
 String _getPocketBaseUrl() {
-  // if (Platform.isAndroid) {
-  return 'https://finbot.76545689.xyz';
-  // } else {
-  // return kDebugMode ? 'http://localhost:8090' : 'https://finbot.76545689.xyz';
-  // }
+  if (Platform.isAndroid) {
+    return 'https://finbot.76545689.xyz';
+  } else {
+    return kDebugMode ? 'http://localhost:8090' : 'https://finbot.76545689.xyz';
+  }
 }
 
 class MainApp extends StatelessWidget {
