@@ -11,6 +11,9 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 // import 'package:http/http.dart' as http;
 import 'package:pocketbase/pocketbase.dart';
+import 'dart:convert';
+import 'package:finapp/models/suggested_transaction.dart';
+import 'package:finapp/models/category.dart';
 
 class VoiceTransactionScreen extends StatefulWidget {
   final FinanceService financeService;
@@ -25,6 +28,7 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
   final isRecording = signal(false);
   final isProcessing = signal(false);
   final recordingDuration = signal(0);
+  final suggestedTransactions = ListSignal<SuggestedTransaction>([]);
   Timer? _timer;
   late AudioRecorder _audioRecorder;
   String? _recordingPath;
@@ -56,32 +60,37 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
             Watch((context) {
               if (isProcessing.value) {
                 return _buildProcessingUI(theme);
+              } else if (suggestedTransactions.isNotEmpty) {
+                return _buildSuggestedTransactionsList(theme);
               }
               return _buildRecordingButton(theme);
             }),
             const SizedBox(height: 20),
             Watch((context) {
-              return AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: isRecording.value
-                    ? Column(
-                        children: [
-                          Text(
-                            'Recording...',
-                            style: theme.textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            '${recordingDuration.value} seconds',
-                            style: theme.textTheme.titleMedium,
-                          ),
-                        ],
-                      )
-                    : Text(
-                        'Tap and hold to record',
-                        style: theme.textTheme.titleLarge,
-                      ),
-              );
+              if (!isProcessing.value && suggestedTransactions.isEmpty) {
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: isRecording.value
+                      ? Column(
+                          children: [
+                            Text(
+                              'Recording...',
+                              style: theme.textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              '${recordingDuration.value} seconds',
+                              style: theme.textTheme.titleMedium,
+                            ),
+                          ],
+                        )
+                      : Text(
+                          'Tap and hold to record',
+                          style: theme.textTheme.titleLarge,
+                        ),
+                );
+              }
+              return const SizedBox.shrink();
             }),
           ],
         ),
@@ -153,6 +162,49 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
     ).animate().fadeIn(duration: 300.ms);
   }
 
+  Widget _buildSuggestedTransactionsList(ThemeData theme) {
+    return Expanded(
+      child: ListView.builder(
+        itemCount: suggestedTransactions.length,
+        itemBuilder: (context, index) {
+          final transaction = suggestedTransactions[index];
+          final category = widget.financeService.categories.firstWhere(
+            (c) => c.id == transaction.categoryId,
+            orElse: () => Category(name: 'Uncategorized', icon: '❓'),
+          );
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundColor:
+                  transaction.type == SuggestedTransactionType.expense
+                      ? theme.colorScheme.errorContainer
+                      : theme.colorScheme.primaryContainer,
+              child: Text(
+                category.icon,
+                style: TextStyle(
+                  color: transaction.type == SuggestedTransactionType.expense
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.primary,
+                ),
+              ),
+            ),
+            title: Text(transaction.description),
+            subtitle: Text(category.name),
+            trailing: Text(
+              '${transaction.type == SuggestedTransactionType.expense ? '-' : '+'}\$${transaction.amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                color: transaction.type == SuggestedTransactionType.expense
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            onTap: () => _editTransaction(transaction),
+          );
+        },
+      ),
+    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
+  }
+
   Future<void> _startRecording() async {
     try {
       if (await _audioRecorder.hasPermission()) {
@@ -197,36 +249,8 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
 
   Future<void> _processAudio(String audioPath) async {
     try {
-      // final audioFile = File(audioPath);
-
-      // MultipartFile file = await MultipartFile.fromF
-
-      // final formData = {
-      //   'audio': MultipartFile.fromString(
-      //     audioString,
-      //     'audio.m4a',
-      //     contentType: MediaType('audio', 'm4a'),
-      //   ),
-      // };
-
-      // final pb = widget.financeService.pb;
-
-      // final res = await pb.send(
-      //   '/app/api/process-audio',
-      //   method: 'POST',
-      //   body: formData,
-      // );
-
-      // print('Server response: $res');
-      // // TODO: Handle the server response and navigate to a results screen
-
       final pb = widget.financeService.pb;
-
-      final dio = Dio(
-        BaseOptions(
-          baseUrl: pb.baseUrl,
-        ),
-      );
+      final dio = Dio(BaseOptions(baseUrl: pb.baseUrl));
 
       FormData formData = FormData.fromMap({
         'audio': await MultipartFile.fromFile(
@@ -236,21 +260,37 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen> {
         ),
       });
 
-      final res = await dio.post(
+      final response = await dio.post(
         '/app/api/process-audio',
         data: formData,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${pb.authStore.token}',
-          },
-        ),
+        options:
+            Options(headers: {'Authorization': 'Bearer ${pb.authStore.token}'}),
       );
 
-      print('Server response: $res');
-      // TODO: Handle the server response and navigate to a results screen
+      // Check if response.data is already a List or if it needs to be decoded
+      final List<dynamic> transactionsJson =
+          response.data is String ? json.decode(response.data) : response.data;
+
+      suggestedTransactions.value = transactionsJson
+          .map((json) => SuggestedTransaction.fromJson(json))
+          .toList();
+
+      // print('Suggested transactions: ${suggestedTransactions.value}');
+      // print in a readable format
+      debugPrint(suggestedTransactions.value
+          .map((t) => '${t.amount} ${t.description} ${t.categoryId} ${t.type}')
+          .join('\n'));
+
+      isProcessing.value = false;
     } catch (e) {
-      print('Error sending audio to server: $e');
+      debugPrint('Error sending audio to server: $e');
       // TODO: Show an error message to the user
+      isProcessing.value = false;
     }
+  }
+
+  void _editTransaction(SuggestedTransaction transaction) {
+    // TODO: Implement edit functionality
+    // This could open a dialog or navigate to a new screen for editing
   }
 }
