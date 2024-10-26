@@ -14,14 +14,16 @@ class FinanceService {
 
   Future<void> initialize() async {
     try {
-      // Attempt to refresh the auth state
       await pb.collection('users').authRefresh();
     } catch (e) {
-      // If refresh fails, it means there's no valid auth state
       debugPrint('Auth refresh failed: $e');
     } finally {
       isInitialized.value = true;
     }
+
+    // Set up realtime subscriptions
+    _subscribeToTransactions();
+    _subscribeToCategories();
   }
 
   String? getCurrentUserId() {
@@ -32,7 +34,7 @@ class FinanceService {
     if (!isInitialized.value) await initialize();
 
     final records = await pb.collection('transactions').getFullList(
-          sort: '-timestamp',
+          sort: '-timestamp', // Sort by timestamp in descending order
           expand: 'category',
         );
     transactions.value =
@@ -68,6 +70,43 @@ class FinanceService {
     categories.add(Category.fromRecord(record));
   }
 
+  void _subscribeToTransactions() {
+    pb.collection('transactions').subscribe('*', (e) {
+      if (e.record == null) return; // Skip if record is null
+
+      if (e.action == 'create') {
+        transactions.add(Transaction.fromRecord(e.record!));
+      } else if (e.action == 'update') {
+        final index = transactions.indexWhere((t) => t.id == e.record!.id);
+        if (index != -1) {
+          transactions[index] = Transaction.fromRecord(e.record!);
+        }
+      } else if (e.action == 'delete') {
+        transactions.removeWhere((t) => t.id == e.record!.id);
+      }
+
+      // Re-sort transactions after any change
+      transactions.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    });
+  }
+
+  void _subscribeToCategories() {
+    pb.collection('user_categories').subscribe('*', (e) {
+      if (e.record == null) return; // Skip if record is null
+
+      if (e.action == 'create') {
+        categories.add(Category.fromRecord(e.record!));
+      } else if (e.action == 'update') {
+        final index = categories.indexWhere((c) => c.id == e.record!.id);
+        if (index != -1) {
+          categories[index] = Category.fromRecord(e.record!);
+        }
+      } else if (e.action == 'delete') {
+        categories.removeWhere((c) => c.id == e.record!.id);
+      }
+    });
+  }
+
   ReadonlySignal<double> get totalIncome => computed(() {
         return transactions
             .where((t) => t.type == TransactionType.income)
@@ -82,4 +121,9 @@ class FinanceService {
 
   ReadonlySignal<double> get balance =>
       computed(() => totalIncome.value - totalExpense.value);
+
+  void dispose() {
+    pb.collection('transactions').unsubscribe();
+    pb.collection('user_categories').unsubscribe();
+  }
 }
