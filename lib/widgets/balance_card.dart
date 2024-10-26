@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finapp/utils/currency_utils.dart';
 
 class BalanceCard extends StatelessWidget {
   final double balance;
@@ -36,7 +37,7 @@ class BalanceCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              '$currency ${balance.toStringAsFixed(2)}',
+              '${CurrencyUtils.getCurrencySymbol(currency)} ${balance.toStringAsFixed(2)}',
               style: theme.textTheme.headlineLarge?.copyWith(
                 color: theme.colorScheme.onPrimary,
                 fontWeight: FontWeight.bold,

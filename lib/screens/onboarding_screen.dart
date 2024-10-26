@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finapp/services/auth_service.dart';
+import 'package:finapp/utils/currency_utils.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
@@ -176,7 +177,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             items: currencies.map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
-                child: Text(value),
+                child: Text('${CurrencyUtils.getCurrencySymbol(value)} $value'),
               );
             }).toList(),
           ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
