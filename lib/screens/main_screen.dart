@@ -72,6 +72,7 @@ class _MainScreenState extends State<MainScreen> {
       ).animate().fadeIn(duration: 300.ms, curve: Curves.easeIn),
       floatingActionButton: FloatingActionButton(
         // mini: true,
+        heroTag: 'voiceTransaction',
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),
         ),
@@ -90,7 +91,8 @@ class _MainScreenState extends State<MainScreen> {
       )
           .animate()
           .scale(delay: 400.ms, duration: 200.ms, curve: Curves.easeOutBack),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.miniCenterDocked,
     );
   }
 }
