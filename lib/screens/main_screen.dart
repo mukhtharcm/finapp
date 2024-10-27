@@ -54,6 +54,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       body: _screens[_selectedIndex]
           .animate()
@@ -77,28 +78,49 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(Icons.insights_rounded), label: 'Insights'),
         ],
       ).animate().fadeIn(duration: 300.ms, curve: Curves.easeIn),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'voiceTransaction',
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(100),
-        ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  VoiceTransactionScreen(financeService: widget.financeService),
-            ),
-          );
-        },
-        child: const Icon(Icons.auto_awesome),
-      )
-          .animate()
-          .scale(delay: 400.ms, duration: 200.ms, curve: Curves.easeOutBack),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.miniCenterDocked,
+      floatingActionButton: _buildAIButton(theme),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
+  }
+
+  Widget _buildAIButton(ThemeData theme) {
+    return FloatingActionButton(
+      mini: false,
+      // shape set as circle
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(100),
+      ),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                VoiceTransactionScreen(financeService: widget.financeService),
+          ),
+        );
+      },
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primary,
+              theme.colorScheme.secondary,
+            ],
+          ),
+        ),
+        child: Icon(
+          Icons.auto_awesome,
+          size: 30,
+          color: theme.colorScheme.onPrimary,
+        ),
+      ),
+    )
+        .animate()
+        .scale(delay: 400.ms, duration: 200.ms, curve: Curves.easeOutBack);
   }
 }
