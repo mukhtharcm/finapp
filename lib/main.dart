@@ -1,10 +1,7 @@
-import 'package:finapp/themes/modern_purple_theme.dart';
 import 'package:finapp/themes/modern_gold_theme.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/screens/auth_wrapper.dart';
 import 'package:finapp/service_locator.dart';
-import 'package:finapp/themes/classic_blue_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
