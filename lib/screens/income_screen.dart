@@ -8,6 +8,7 @@ import 'package:signals/signals_flutter.dart';
 import 'package:finapp/widgets/transaction_detail_dialog.dart';
 import 'package:finapp/utils/currency_utils.dart';
 import 'package:get_it/get_it.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class IncomeScreen extends StatelessWidget {
   final FinanceService financeService;
@@ -58,7 +59,12 @@ class IncomeScreen extends StatelessWidget {
                 onTap: () =>
                     _showTransactionDetails(context, transaction, category),
               ),
-            );
+            ).animate().fadeIn(duration: 300.ms, delay: (50 * index).ms).slideX(
+                begin: 0.2,
+                end: 0,
+                duration: 300.ms,
+                delay: (50 * index).ms,
+                curve: Curves.easeOutCubic);
           },
         );
       }),
@@ -75,7 +81,7 @@ class IncomeScreen extends StatelessWidget {
           );
         },
         child: const Icon(Icons.add_rounded),
-      ),
+      ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/models/category.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class CategoriesScreen extends StatelessWidget {
   final FinanceService financeService;
@@ -34,14 +35,19 @@ class CategoriesScreen extends StatelessWidget {
                 ),
                 title: Text(category.name, style: theme.textTheme.titleMedium),
               ),
-            );
+            ).animate().fadeIn(duration: 300.ms, delay: (50 * index).ms).slideX(
+                begin: 0.2,
+                end: 0,
+                duration: 300.ms,
+                delay: (50 * index).ms,
+                curve: Curves.easeOutCubic);
           },
         );
       }),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCategoryDialog(context),
         child: const Icon(Icons.add_rounded),
-      ),
+      ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack),
     );
   }
 
