@@ -3,12 +3,16 @@ import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:finapp/widgets/transaction_detail_dialog.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:finapp/utils/currency_utils.dart';
+import 'package:finapp/services/auth_service.dart';
+import 'package:get_it/get_it.dart';
 
 class RecentTransactions extends StatelessWidget {
   final ListSignal<Transaction> transactions;
   final ListSignal<Category> categories;
+  final AuthService authService = GetIt.instance<AuthService>();
 
-  const RecentTransactions({
+  RecentTransactions({
     super.key,
     required this.transactions,
     required this.categories,
@@ -17,6 +21,8 @@ class RecentTransactions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final currencySymbol =
+        CurrencyUtils.getCurrencySymbol(authService.preferredCurrency);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -61,7 +67,7 @@ class RecentTransactions extends StatelessWidget {
                       style: theme.textTheme.titleMedium),
                   subtitle: Text(category.name),
                   trailing: Text(
-                    '${transaction.type == TransactionType.expense ? '-' : '+'}\$${transaction.amount.toStringAsFixed(2)}',
+                    '${transaction.type == TransactionType.expense ? '-' : ''}$currencySymbol${transaction.amount.toStringAsFixed(2)}',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: transaction.type == TransactionType.expense
                           ? theme.colorScheme.error
@@ -87,6 +93,8 @@ class RecentTransactions extends StatelessWidget {
       builder: (context) => TransactionDetailDialog(
         transaction: transaction,
         category: category,
+        currencySymbol:
+            CurrencyUtils.getCurrencySymbol(authService.preferredCurrency),
       ),
     );
   }

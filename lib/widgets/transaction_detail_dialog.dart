@@ -7,11 +7,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 class TransactionDetailDialog extends StatelessWidget {
   final Transaction transaction;
   final Category category;
+  final String currencySymbol;
 
   const TransactionDetailDialog({
     super.key,
     required this.transaction,
     required this.category,
+    required this.currencySymbol,
   });
 
   @override
@@ -44,7 +46,7 @@ class TransactionDetailDialog extends StatelessWidget {
                 _buildDetailRow(
                   context,
                   'Amount',
-                  '${transaction.type == TransactionType.expense ? '-' : '+'}\$${transaction.amount.toStringAsFixed(2)}',
+                  '${transaction.type == TransactionType.expense ? '-' : ''}$currencySymbol${transaction.amount.toStringAsFixed(2)}',
                   Icons.attach_money,
                   color: transaction.type == TransactionType.expense
                       ? theme.colorScheme.error

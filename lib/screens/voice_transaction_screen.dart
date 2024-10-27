@@ -1,20 +1,20 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/services/finance_service.dart';
+import 'package:finapp/services/auth_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-// import 'package:http/http.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:signals/signals_flutter.dart';
 import 'dart:async';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
-// import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:finapp/models/suggested_transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/screens/edit_transaction_screen.dart';
-import 'dart:io'; // Add this import at the top of the file
+import 'dart:io';
+import 'package:get_it/get_it.dart';
 
 class VoiceTransactionScreen extends StatefulWidget {
   final FinanceService financeService;
@@ -36,6 +36,8 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
 
   late AnimationController _addingController;
   final Map<SuggestedTransaction, bool> _addingStatus = {};
+
+  final AuthService _authService = GetIt.instance<AuthService>();
 
   @override
   void initState() {
@@ -228,7 +230,8 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '${transaction.type == SuggestedTransactionType.expense ? '-' : '+'}\$${transaction.amount.toStringAsFixed(2)}',
+                      transaction
+                          .formattedAmount(_authService.preferredCurrency),
                       style: TextStyle(
                         color:
                             transaction.type == SuggestedTransactionType.expense

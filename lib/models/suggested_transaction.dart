@@ -1,3 +1,5 @@
+import 'package:finapp/utils/currency_utils.dart';
+
 enum SuggestedTransactionType { income, expense }
 
 class SuggestedTransaction {
@@ -22,5 +24,10 @@ class SuggestedTransaction {
           ? SuggestedTransactionType.income
           : SuggestedTransactionType.expense,
     );
+  }
+
+  String formattedAmount(String currencyCode) {
+    final currencySymbol = CurrencyUtils.getCurrencySymbol(currencyCode);
+    return '$currencySymbol${amount.toStringAsFixed(2)}';
   }
 }

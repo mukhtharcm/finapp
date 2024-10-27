@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:finapp/services/finance_service.dart';
+import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:finapp/utils/currency_utils.dart';
+import 'package:get_it/get_it.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final FinanceService financeService;
@@ -25,10 +28,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _amountController = TextEditingController();
   Category? _selectedCategory;
   final isLoading = signal(false);
+  final AuthService authService = GetIt.instance<AuthService>();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final currencySymbol =
+        CurrencyUtils.getCurrencySymbol(authService.preferredCurrency);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -68,6 +74,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       controller: _amountController,
                       decoration: InputDecoration(
                         labelText: 'Amount',
+                        prefixText: currencySymbol,
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
