@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/services/auth_service.dart';
@@ -30,19 +31,20 @@ class DashboardScreen extends StatelessWidget {
             onPressed: () => authService.logout(),
           ),
           // Add dev mode menu
-          PopupMenuButton<String>(
-            onSelected: (value) async {
-              if (value == 'reset_onboarding') {
-                await _resetOnboarding(context);
-              }
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'reset_onboarding',
-                child: Text('Reset Onboarding (Dev)'),
-              ),
-            ],
-          ),
+          if (kDebugMode)
+            PopupMenuButton<String>(
+              onSelected: (value) async {
+                if (value == 'reset_onboarding') {
+                  await _resetOnboarding(context);
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  value: 'reset_onboarding',
+                  child: Text('Reset Onboarding (Dev)'),
+                ),
+              ],
+            ),
         ],
       ),
       body: RefreshIndicator(
