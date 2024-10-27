@@ -76,16 +76,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   children: _buildPageIndicator(),
                 ),
                 const SizedBox(height: 20),
-                if (_currentPage == _pages.length + 1)
-                  ElevatedButton(
-                    onPressed: _onGetStarted,
-                    child: const Text('Get Started'),
-                  )
-                else
-                  TextButton(
-                    onPressed: _onSkip,
-                    child: const Text('Skip'),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (_currentPage > 0)
+                      IconButton(
+                        icon: Icon(Icons.arrow_back,
+                            color: Theme.of(context).primaryColor),
+                        onPressed: () {
+                          _pageController.previousPage(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                      )
+                    else
+                      SizedBox(width: 48), // Placeholder for alignment
+                    if (_currentPage < _pages.length + 1)
+                      TextButton(
+                        onPressed: _onSkip,
+                        child: const Text('Skip'),
+                      )
+                    else
+                      ElevatedButton(
+                        onPressed: _onGetStarted,
+                        child: const Text('Get Started'),
+                      ),
+                    if (_currentPage < _pages.length + 1)
+                      IconButton(
+                        icon: Icon(Icons.arrow_forward,
+                            color: Theme.of(context).primaryColor),
+                        onPressed: () {
+                          _pageController.nextPage(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                      )
+                    else
+                      SizedBox(width: 48), // Placeholder for alignment
+                  ],
+                ),
               ],
             ),
           ),
@@ -145,17 +176,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildCurrencyPage() {
-    List<String> currencies = [
-      'USD',
-      'EUR',
-      'GBP',
-      'JPY',
-      'AUD',
-      'CAD',
-      'CHF',
-      'CNY',
-      'INR'
-    ];
+    final theme = Theme.of(context);
+    List<String> currencies = CurrencyUtils.getAllCurrencyCodes();
     return Padding(
       padding: const EdgeInsets.all(40.0),
       child: Column(
@@ -163,24 +185,68 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Text(
             'Select your preferred currency',
-            style: Theme.of(context).textTheme.headlineMedium,
+            style: theme.textTheme.headlineMedium,
             textAlign: TextAlign.center,
           ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.2, end: 0),
           const SizedBox(height: 40),
-          DropdownButton<String>(
-            value: _selectedCurrency,
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedCurrency = newValue!;
-              });
-            },
-            items: currencies.map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text('${CurrencyUtils.getCurrencySymbol(value)} $value'),
-              );
-            }).toList(),
-          ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: theme.colorScheme.primary),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: ButtonTheme(
+                alignedDropdown: true,
+                child: DropdownButton<String>(
+                  value: _selectedCurrency,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedCurrency = newValue!;
+                    });
+                  },
+                  items:
+                      currencies.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(value),
+                            const SizedBox(width: 8),
+                            Text(
+                              CurrencyUtils.getCurrencySymbol(value),
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  isExpanded: true,
+                  icon: Icon(Icons.arrow_drop_down,
+                      color: theme.colorScheme.primary),
+                  dropdownColor: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  menuMaxHeight: 300, // Limit the height of the dropdown menu
+                ),
+              ),
+            ),
+          )
+              .animate()
+              .fadeIn(delay: 200.ms, duration: 300.ms)
+              .slideY(begin: 0.2, end: 0),
+          const SizedBox(height: 20),
+          Text(
+            'You can change this later in settings',
+            style: theme.textTheme.bodySmall,
+            textAlign: TextAlign.center,
+          ).animate().fadeIn(delay: 400.ms, duration: 300.ms),
         ],
       ),
     );
