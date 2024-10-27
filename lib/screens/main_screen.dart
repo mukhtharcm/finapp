@@ -4,6 +4,7 @@ import 'package:finapp/screens/dashboard_screen.dart';
 import 'package:finapp/screens/income_screen.dart';
 import 'package:finapp/screens/expense_screen.dart';
 import 'package:finapp/screens/categories_screen.dart';
+import 'package:finapp/screens/insights_screen.dart';
 import 'package:finapp/screens/voice_transaction_screen.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
@@ -12,8 +13,11 @@ class MainScreen extends StatefulWidget {
   final AuthService authService;
   final FinanceService financeService;
 
-  const MainScreen(
-      {super.key, required this.authService, required this.financeService});
+  const MainScreen({
+    super.key,
+    required this.authService,
+    required this.financeService,
+  });
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -34,6 +38,7 @@ class _MainScreenState extends State<MainScreen> {
       IncomeScreen(financeService: widget.financeService),
       ExpenseScreen(financeService: widget.financeService),
       CategoriesScreen(financeService: widget.financeService),
+      InsightsScreen(financeService: widget.financeService),
     ];
 
     // Fetch initial data
@@ -68,10 +73,11 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(Icons.trending_down_rounded), label: 'Expenses'),
           BottomNavigationBarItem(
               icon: Icon(Icons.category_rounded), label: 'Categories'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.insights_rounded), label: 'Insights'),
         ],
       ).animate().fadeIn(duration: 300.ms, curve: Curves.easeIn),
       floatingActionButton: FloatingActionButton(
-        // mini: true,
         heroTag: 'voiceTransaction',
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),
