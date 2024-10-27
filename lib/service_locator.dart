@@ -9,7 +9,10 @@ import 'dart:io' show Platform;
 final getIt = GetIt.instance;
 
 String _getPocketBaseUrl() {
-  return kDebugMode ? 'https://pb.76545689.xyz' : 'https://finbot.76545689.xyz';
+  if (kDebugMode && Platform.isAndroid) {
+    return 'https://pb.76545689.xyz';
+  }
+  return kDebugMode ? 'http://localhost:8090' : 'https://finbot.76545689.xyz';
 }
 
 Future<void> setupServiceLocator() async {
