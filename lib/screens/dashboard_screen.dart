@@ -7,6 +7,7 @@ import 'package:finapp/widgets/balance_card.dart';
 import 'package:finapp/widgets/recent_transactions.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DashboardScreen extends StatelessWidget {
   final AuthService authService;
@@ -67,6 +68,20 @@ class DashboardScreen extends StatelessWidget {
                     duration: 400.ms,
                     curve: Curves.easeOutCubic),
             const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _launchTelegramBot,
+              icon: Icon(Icons.telegram, color: theme.colorScheme.onPrimary),
+              label: Text('Open Telegram Bot',
+                  style: TextStyle(color: theme.colorScheme.onPrimary)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+            ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
+            const SizedBox(height: 24),
             Watch((context) {
               // Force rebuild when either transactions or categories change
               financeService.transactions.length;
@@ -105,5 +120,12 @@ class DashboardScreen extends StatelessWidget {
       const SnackBar(
           content: Text('Onboarding reset. Restart the app to see changes.')),
     );
+  }
+
+  void _launchTelegramBot() async {
+    final Uri url = Uri.parse('https://t.me/your_bot_username');
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
   }
 }
