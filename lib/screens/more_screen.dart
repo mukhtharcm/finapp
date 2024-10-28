@@ -1,3 +1,4 @@
+import 'package:finapp/screens/accounts_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
@@ -133,9 +134,10 @@ class MoreScreen extends StatelessWidget {
               icon: Icons.account_balance_outlined,
               title: 'Accounts',
               subtitle: 'Manage your financial accounts',
-              onTap: () {
-                // TODO: Navigate to accounts screen
-              },
+              onTap: () => _navigateTo(
+                context,
+                AccountsScreen(financeService: financeService),
+              ),
             ),
           ],
         ),
