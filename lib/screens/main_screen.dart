@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/screens/dashboard_screen.dart';
-import 'package:finapp/screens/income_screen.dart';
-import 'package:finapp/screens/expense_screen.dart';
-import 'package:finapp/screens/categories_screen.dart';
+import 'package:finapp/screens/transactions_screen.dart';
 import 'package:finapp/screens/insights_screen.dart';
+import 'package:finapp/screens/more_screen.dart';
 import 'package:finapp/screens/voice_transaction_screen.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
@@ -33,17 +32,25 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _screens = [
       DashboardScreen(
-          authService: widget.authService,
-          financeService: widget.financeService),
-      IncomeScreen(financeService: widget.financeService),
-      ExpenseScreen(financeService: widget.financeService),
-      CategoriesScreen(financeService: widget.financeService),
-      InsightsScreen(financeService: widget.financeService),
+        authService: widget.authService,
+        financeService: widget.financeService,
+      ),
+      TransactionsScreen(
+        financeService: widget.financeService,
+      ),
+      InsightsScreen(
+        financeService: widget.financeService,
+      ),
+      MoreScreen(
+        authService: widget.authService,
+        financeService: widget.financeService,
+      ),
     ];
 
     // Fetch initial data
     widget.financeService.fetchTransactions();
     widget.financeService.fetchCategories();
+    widget.financeService.fetchAccounts();
   }
 
   void _onItemTapped(int index) {
@@ -67,15 +74,21 @@ class _MainScreenState extends State<MainScreen> {
         onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_rounded), label: 'Dashboard'),
+            icon: Icon(Icons.dashboard_rounded),
+            label: 'Dashboard',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.trending_up_rounded), label: 'Income'),
+            icon: Icon(Icons.receipt_long_rounded),
+            label: 'Transactions',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.trending_down_rounded), label: 'Expenses'),
+            icon: Icon(Icons.insights_rounded),
+            label: 'Insights',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.category_rounded), label: 'Categories'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.insights_rounded), label: 'Insights'),
+            icon: Icon(Icons.more_horiz),
+            label: 'More',
+          ),
         ],
       ).animate().fadeIn(duration: 300.ms, curve: Curves.easeIn),
       floatingActionButton: _buildAIButton(theme),
@@ -86,7 +99,6 @@ class _MainScreenState extends State<MainScreen> {
   Widget _buildAIButton(ThemeData theme) {
     return FloatingActionButton(
       mini: false,
-      // shape set as circle
       heroTag: 'aiButtonTag',
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(100),
