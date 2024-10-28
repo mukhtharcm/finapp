@@ -230,8 +230,8 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      transaction
-                          .formattedAmount(_authService.preferredCurrency),
+                      transaction.formattedAmount(
+                          _authService.preferredCurrency.value),
                       style: TextStyle(
                         color:
                             transaction.type == SuggestedTransactionType.expense

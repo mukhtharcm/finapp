@@ -17,7 +17,7 @@ class InsightsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currencySymbol =
-        CurrencyUtils.getCurrencySymbol(authService.preferredCurrency);
+        CurrencyUtils.getCurrencySymbol(authService.preferredCurrency.value);
 
     return Scaffold(
       appBar: AppBar(

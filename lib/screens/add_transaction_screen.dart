@@ -32,148 +32,151 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final currencySymbol =
-        CurrencyUtils.getCurrencySymbol(authService.preferredCurrency);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Add ${widget.transactionType == TransactionType.income ? 'Income' : 'Expense'}',
-          style: theme.textTheme.headlineSmall,
+    return Watch((context) {
+      final currencySymbol =
+          CurrencyUtils.getCurrencySymbol(authService.preferredCurrency.value);
+
+      final theme = Theme.of(context);
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.transactionType == TransactionType.income
+                ? 'Add Income'
+                : 'Add Expense',
+            style: theme.textTheme.headlineSmall,
+          ),
         ),
-      ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: _descriptionController,
-                      decoration: InputDecoration(
-                        labelText: 'Description',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a description';
-                        }
-                        return null;
-                      },
-                    )
-                        .animate()
-                        .fadeIn(duration: 300.ms)
-                        .slideX(begin: -0.1, end: 0),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _amountController,
-                      decoration: InputDecoration(
-                        labelText: 'Amount',
-                        prefixText: currencySymbol,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter an amount';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
-                        }
-                        return null;
-                      },
-                    )
-                        .animate()
-                        .fadeIn(delay: 100.ms, duration: 300.ms)
-                        .slideX(begin: -0.1, end: 0),
-                    const SizedBox(height: 16),
-                    InkWell(
-                      onTap: _showCategoryPicker,
-                      child: InputDecorator(
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _descriptionController,
                         decoration: InputDecoration(
-                          labelText: 'Category',
+                          labelText: 'Description',
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                                _selectedCategory?.name ?? 'Select a category'),
-                            Icon(_selectedCategory != null
-                                ? Icons.check
-                                : Icons.arrow_drop_down),
-                          ],
-                        ),
-                      ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 200.ms, duration: 300.ms)
-                        .slideX(begin: -0.1, end: 0),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _submitForm,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: Text('Add Transaction',
-                            style: theme.textTheme.titleLarge),
-                      ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 300.ms, duration: 300.ms)
-                        .slideY(begin: 0.1, end: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Watch((context) {
-            if (isLoading.value) {
-              return Container(
-                color: Colors.black54,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            theme.colorScheme.onPrimary),
-                      )
-                          .animate(onPlay: (controller) => controller.repeat())
-                          .scaleXY(begin: 0.8, end: 1.2, duration: 600.ms)
-                          .then(delay: 600.ms)
-                          .scaleXY(begin: 1.2, end: 0.8, duration: 600.ms),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Adding transaction...',
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(color: Colors.white),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a description';
+                          }
+                          return null;
+                        },
                       )
                           .animate()
                           .fadeIn(duration: 300.ms)
-                          .then()
-                          .shimmer(duration: 1.seconds, color: Colors.white54),
+                          .slideX(begin: -0.1, end: 0),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _amountController,
+                        decoration: InputDecoration(
+                          labelText: 'Amount',
+                          prefixText: currencySymbol,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter an amount';
+                          }
+                          if (double.tryParse(value) == null) {
+                            return 'Please enter a valid number';
+                          }
+                          return null;
+                        },
+                      )
+                          .animate()
+                          .fadeIn(delay: 100.ms, duration: 300.ms)
+                          .slideX(begin: -0.1, end: 0),
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: _showCategoryPicker,
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'Category',
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(_selectedCategory?.name ??
+                                  'Select a category'),
+                              Icon(_selectedCategory != null
+                                  ? Icons.check
+                                  : Icons.arrow_drop_down),
+                            ],
+                          ),
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(delay: 200.ms, duration: 300.ms)
+                          .slideX(begin: -0.1, end: 0),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _submitForm,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text('Add Transaction',
+                              style: theme.textTheme.titleLarge),
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(delay: 300.ms, duration: 300.ms)
+                          .slideY(begin: 0.1, end: 0),
                     ],
                   ),
                 ),
-              ).animate().fadeIn(duration: 300.ms);
-            }
-            return const SizedBox.shrink();
-          }),
-        ],
-      ),
-    );
+              ),
+            ),
+            Watch((context) {
+              if (isLoading.value) {
+                return Container(
+                  color: Colors.black54,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              theme.colorScheme.onPrimary),
+                        )
+                            .animate(
+                                onPlay: (controller) => controller.repeat())
+                            .scaleXY(begin: 0.8, end: 1.2, duration: 600.ms)
+                            .then(delay: 600.ms)
+                            .scaleXY(begin: 1.2, end: 0.8, duration: 600.ms),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Adding transaction...',
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(color: Colors.white),
+                        ).animate().fadeIn(duration: 300.ms).then().shimmer(
+                            duration: 1.seconds, color: Colors.white54),
+                      ],
+                    ),
+                  ),
+                ).animate().fadeIn(duration: 300.ms);
+              }
+              return const SizedBox.shrink();
+            }),
+          ],
+        ),
+      );
+    });
   }
 
   void _showCategoryPicker() {

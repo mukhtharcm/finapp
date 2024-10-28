@@ -1,23 +1,48 @@
 import 'package:pocketbase/pocketbase.dart';
+import 'package:signals/signals.dart';
+import 'package:finapp/models/user.dart';
 import 'dart:async';
 
 class AuthService {
   final PocketBase _pb;
 
-  AuthService(this._pb);
+  // Main user signal
+  final user = signal<UserModel>(UserModel.empty());
+
+  // Computed signals for frequently used values
+  late final userName = computed(() => user.value.name);
+  late final preferredCurrency = computed(() => user.value.preferredCurrency);
+
+  AuthService(this._pb) {
+    // Initialize user data if authenticated
+    if (isAuthenticated) {
+      user.value = UserModel.fromRecord(currentUser);
+    }
+
+    // Setup realtime subscription when service is created
+    _setupRealtimeSubscription();
+  }
 
   bool get isAuthenticated => _pb.authStore.isValid;
-
   Stream<AuthStoreEvent> get authStateChanges => _pb.authStore.onChange;
-
   RecordModel? get currentUser => _pb.authStore.model;
 
-  String get userName => currentUser?.getStringValue('name') ?? 'User';
-  String get preferredCurrency =>
-      currentUser?.getStringValue('preferred_currency') ?? 'USD';
+  void _setupRealtimeSubscription() {
+    if (!isAuthenticated) return;
+
+    final userId = currentUser!.id;
+    _pb.collection('users').subscribe(userId, (e) {
+      if (e.record != null) {
+        // Update user signal with new data
+        user.value = UserModel.fromRecord(e.record);
+      }
+    });
+  }
 
   Future<void> login(String email, String password) async {
     await _pb.collection('users').authWithPassword(email, password);
+    user.value = UserModel.fromRecord(currentUser);
+    _setupRealtimeSubscription();
   }
 
   Future<void> signUp(String email, String password) async {
@@ -25,17 +50,17 @@ class AuthService {
       'email': email,
       'password': password,
       'passwordConfirm': password,
-      // We'll set default values for name and preferred_currency
       'name': 'User',
       'preferred_currency': 'USD',
     });
-    // After creating the user, log them in
     await login(email, password);
   }
 
   Future<void> logout() async {
+    await _pb.collection('users').unsubscribe(currentUser!.id);
     _pb.authStore.clear();
     await _pb.realtime.unsubscribe();
+    user.value = UserModel.empty();
   }
 
   Future<void> updateUserProfile(
@@ -48,7 +73,7 @@ class AuthService {
       if (preferredCurrency != null) 'preferred_currency': preferredCurrency,
     });
 
-    // Refresh the auth store to get the updated user data
     await _pb.collection('users').authRefresh();
+    user.value = UserModel.fromRecord(currentUser);
   }
 }

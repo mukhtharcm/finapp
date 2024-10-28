@@ -19,16 +19,18 @@ class IncomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currencySymbol =
-        CurrencyUtils.getCurrencySymbol(authService.preferredCurrency);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Income', style: theme.textTheme.headlineSmall),
       ),
       body: Watch((context) {
+        final currencySymbol = CurrencyUtils.getCurrencySymbol(
+            authService.preferredCurrency.value);
         final incomeTransactions = financeService.transactions
             .where((t) => t.type == TransactionType.income)
             .toList();
+
         return ListView.builder(
           itemCount: incomeTransactions.length,
           itemBuilder: (context, index) {
@@ -92,8 +94,8 @@ class IncomeScreen extends StatelessWidget {
       builder: (context) => TransactionDetailDialog(
         transaction: transaction,
         category: category,
-        currencySymbol:
-            CurrencyUtils.getCurrencySymbol(authService.preferredCurrency),
+        currencySymbol: CurrencyUtils.getCurrencySymbol(
+            authService.preferredCurrency.value),
       ),
     );
   }

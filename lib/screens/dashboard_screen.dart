@@ -25,8 +25,12 @@ class DashboardScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome, ${authService.userName}',
-            style: theme.textTheme.headlineSmall),
+        title: Watch((context) {
+          return Text(
+            'Welcome, ${authService.userName}',
+            style: theme.textTheme.headlineSmall,
+          );
+        }),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_rounded),
@@ -58,60 +62,62 @@ class DashboardScreen extends StatelessWidget {
             ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await financeService.fetchCategories();
-          await financeService.fetchTransactions();
-        },
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Watch((context) => BalanceCard(
-                      balance: financeService.balance.value,
-                      currency: authService.preferredCurrency,
-                    ))
-                .animate()
-                .fadeIn(duration: 400.ms, curve: Curves.easeInOut)
-                .slideY(
-                    begin: 0.05,
-                    end: 0,
-                    duration: 400.ms,
-                    curve: Curves.easeOutCubic),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _launchTelegramBot,
-              icon: Icon(Icons.telegram, color: theme.colorScheme.onPrimary),
-              label: Text('Open Telegram Bot',
-                  style: TextStyle(color: theme.colorScheme.onPrimary)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-              ),
-            ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
-            const SizedBox(height: 24),
-            Watch((context) {
-              // Force rebuild when either transactions or categories change
-              financeService.transactions.length;
-              financeService.categories.length;
-              return RecentTransactions(
-                transactions: financeService.transactions,
-                categories: financeService.categories,
-              );
-            })
-                .animate()
-                .fadeIn(
-                    delay: 200.ms, duration: 400.ms, curve: Curves.easeInOut)
-                .slideY(
-                    begin: 0.05,
-                    end: 0,
-                    duration: 400.ms,
-                    curve: Curves.easeOutCubic),
-          ],
-        ),
-      ),
+      body: Watch((context) {
+        return RefreshIndicator(
+          onRefresh: () async {
+            await financeService.fetchCategories();
+            await financeService.fetchTransactions();
+          },
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Watch((context) => BalanceCard(
+                        balance: financeService.balance.value,
+                        currency: authService.preferredCurrency.value,
+                      ))
+                  .animate()
+                  .fadeIn(duration: 400.ms, curve: Curves.easeInOut)
+                  .slideY(
+                      begin: 0.05,
+                      end: 0,
+                      duration: 400.ms,
+                      curve: Curves.easeOutCubic),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _launchTelegramBot,
+                icon: Icon(Icons.telegram, color: theme.colorScheme.onPrimary),
+                label: Text('Open Telegram Bot',
+                    style: TextStyle(color: theme.colorScheme.onPrimary)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+              ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
+              const SizedBox(height: 24),
+              Watch((context) {
+                // Force rebuild when either transactions or categories change
+                financeService.transactions.length;
+                financeService.categories.length;
+                return RecentTransactions(
+                  transactions: financeService.transactions,
+                  categories: financeService.categories,
+                );
+              })
+                  .animate()
+                  .fadeIn(
+                      delay: 200.ms, duration: 400.ms, curve: Curves.easeInOut)
+                  .slideY(
+                      begin: 0.05,
+                      end: 0,
+                      duration: 400.ms,
+                      curve: Curves.easeOutCubic),
+            ],
+          ),
+        );
+      }),
     );
   }
 

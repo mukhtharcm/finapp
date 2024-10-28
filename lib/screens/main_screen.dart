@@ -87,6 +87,7 @@ class _MainScreenState extends State<MainScreen> {
     return FloatingActionButton(
       mini: false,
       // shape set as circle
+      heroTag: 'aiButtonTag',
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(100),
       ),
