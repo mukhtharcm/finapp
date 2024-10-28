@@ -1,3 +1,4 @@
+import 'package:finapp/screens/profile_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/theme_service.dart';
@@ -76,7 +77,14 @@ class SettingsScreen extends StatelessWidget {
                   leading: const Icon(Icons.person_outline),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    // TODO: Navigate to profile settings
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileSettingsScreen(
+                          authService: authService,
+                        ),
+                      ),
+                    );
                   },
                 ),
                 ListTile(
