@@ -125,7 +125,9 @@ class DashboardScreen extends StatelessWidget {
   }
 
   void _launchTelegramBot() async {
-    final Uri url = Uri.parse('https://t.me/your_bot_username');
+    var botUsername = kDebugMode ? 'finmanapptestbot' : 'finmanappbot';
+    final Uri url = Uri.parse(
+        'https://t.me/$botUsername?start=${authService.currentUser?.id}');
     if (!await launchUrl(url)) {
       throw Exception('Could not launch $url');
     }
