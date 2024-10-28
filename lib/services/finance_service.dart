@@ -3,11 +3,13 @@ import 'package:pocketbase/pocketbase.dart';
 import 'package:signals/signals.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
+import 'package:finapp/models/account.dart';
 
 class FinanceService {
   final PocketBase pb;
   final transactions = ListSignal<Transaction>([]);
   final categories = ListSignal<Category>([]);
+  final accounts = ListSignal<Account>([]);
   final isInitialized = signal(false);
 
   FinanceService(this.pb);
@@ -23,10 +25,12 @@ class FinanceService {
 
     // Set up realtime subscriptions
     _subscribeToCategories();
+    _subscribeToAccounts();
     _subscribeToTransactions();
 
-    // Fetch categories first, then transactions
+    // Fetch data
     await fetchCategories();
+    await fetchAccounts();
     await fetchTransactions();
   }
 
@@ -114,6 +118,54 @@ class FinanceService {
     });
   }
 
+  void _subscribeToAccounts() {
+    final userId = getCurrentUserId();
+    if (userId == null) return;
+
+    pb.collection('accounts').subscribe('*', (e) {
+      if (e.action == 'create') {
+        accounts.add(Account.fromRecord(e.record!));
+      } else if (e.action == 'update') {
+        final index = accounts.toList().indexWhere((a) => a.id == e.record!.id);
+        if (index != -1) {
+          accounts[index] = Account.fromRecord(e.record!);
+        }
+      } else if (e.action == 'delete') {
+        accounts.removeWhere((a) => a.id == e.record!.id);
+      }
+    });
+  }
+
+  Future<void> fetchAccounts() async {
+    if (!isInitialized.value) await initialize();
+    final userId = getCurrentUserId();
+    if (userId == null) return;
+
+    final result = await pb.collection('accounts').getList(
+          filter: 'user = "$userId"',
+          sort: '-created',
+        );
+
+    accounts.value =
+        result.items.map((record) => Account.fromRecord(record)).toList();
+  }
+
+  Future<void> addAccount(Account account) async {
+    if (!isInitialized.value) await initialize();
+    await pb.collection('accounts').create(body: account.toJson());
+  }
+
+  Future<void> updateAccount(Account account) async {
+    if (!isInitialized.value) await initialize();
+    if (account.id == null) return;
+    await pb.collection('accounts').update(account.id!, body: account.toJson());
+  }
+
+  Future<void> deleteAccount(String accountId) async {
+    if (!isInitialized.value) await initialize();
+    await pb.collection('accounts').delete(accountId);
+  }
+
   ReadonlySignal<double> get totalIncome => computed(() {
         return transactions
             .where((t) => t.type == TransactionType.income)
@@ -129,8 +181,28 @@ class FinanceService {
   ReadonlySignal<double> get balance =>
       computed(() => totalIncome.value - totalExpense.value);
 
+  Map<String, double> getAccountBalance(String accountId) {
+    final accountTransactions =
+        transactions.where((t) => t.accountId == accountId);
+
+    double income = accountTransactions
+        .where((t) => t.type == TransactionType.income)
+        .fold(0, (sum, t) => sum + t.amount);
+
+    double expenses = accountTransactions
+        .where((t) => t.type == TransactionType.expense)
+        .fold(0, (sum, t) => sum + t.amount);
+
+    return {
+      'income': income,
+      'expenses': expenses,
+      'balance': income - expenses,
+    };
+  }
+
   void dispose() {
     pb.collection('transactions').unsubscribe();
     pb.collection('user_categories').unsubscribe();
+    pb.collection('accounts').unsubscribe();
   }
 }

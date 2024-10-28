@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:finapp/models/suggested_transaction.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/models/category.dart';
+import 'package:finapp/models/account.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class EditTransactionScreen extends StatefulWidget {
@@ -25,6 +26,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   late TextEditingController _amountController;
   late SuggestedTransactionType _transactionType;
   String? _categoryId;
+  String? _accountId;
 
   @override
   void initState() {
@@ -35,11 +37,18 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         TextEditingController(text: widget.transaction.amount.toString());
     _transactionType = widget.transaction.type;
     _categoryId = _findValidCategoryId(widget.transaction.categoryId);
+    _accountId = _findValidAccountId(widget.transaction.accountId);
   }
 
   String? _findValidCategoryId(String categoryId) {
     return widget.financeService.categories.any((c) => c.id == categoryId)
         ? categoryId
+        : null;
+  }
+
+  String? _findValidAccountId(String accountId) {
+    return widget.financeService.accounts.any((a) => a.id == accountId)
+        ? accountId
         : null;
   }
 
@@ -63,6 +72,8 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                   keyboardType: TextInputType.number),
               const SizedBox(height: 12),
               _buildTransactionTypeSelector(theme),
+              const SizedBox(height: 12),
+              _buildAccountDropdown(theme),
               const SizedBox(height: 12),
               _buildCategoryDropdown(theme),
               const SizedBox(height: 24),
@@ -98,13 +109,13 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
           segments: [
             ButtonSegment<SuggestedTransactionType>(
               value: SuggestedTransactionType.income,
-              label: Text('Income'),
-              icon: Icon(Icons.trending_up),
+              label: const Text('Income'),
+              icon: const Icon(Icons.trending_up),
             ),
             ButtonSegment<SuggestedTransactionType>(
               value: SuggestedTransactionType.expense,
-              label: Text('Expense'),
-              icon: Icon(Icons.trending_down),
+              label: const Text('Expense'),
+              icon: const Icon(Icons.trending_down),
             ),
           ],
           selected: {_transactionType},
@@ -118,6 +129,54 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     )
         .animate()
         .fadeIn(delay: 200.ms, duration: 300.ms)
+        .slideX(begin: -0.1, end: 0);
+  }
+
+  Widget _buildAccountDropdown(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Account', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: _accountId,
+          onChanged: (String? newValue) {
+            setState(() {
+              _accountId = newValue;
+            });
+          },
+          items: [
+            DropdownMenuItem<String>(
+              value: null,
+              child: Text('Select an account',
+                  style: TextStyle(color: theme.hintColor)),
+            ),
+            ...widget.financeService.accounts.map((Account account) {
+              return DropdownMenuItem<String>(
+                value: account.id,
+                child: Row(
+                  children: [
+                    Text(account.icon),
+                    const SizedBox(width: 8),
+                    Text(account.name),
+                  ],
+                ),
+              );
+            }),
+          ],
+          decoration: InputDecoration(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+          isExpanded: true,
+          itemHeight: 50,
+          menuMaxHeight: 300,
+        ),
+      ],
+    )
+        .animate()
+        .fadeIn(delay: 250.ms, duration: 300.ms)
         .slideX(begin: -0.1, end: 0);
   }
 
@@ -146,7 +205,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                 child: Row(
                   children: [
                     Text(category.icon),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(category.name),
                   ],
                 ),
@@ -155,7 +214,8 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
           ],
           decoration: InputDecoration(
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
           isExpanded: true,
           itemHeight: 50,
@@ -174,7 +234,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       child: ElevatedButton(
         onPressed: _saveChanges,
         style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -189,7 +249,14 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   void _saveChanges() {
     if (_categoryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a valid category')),
+        const SnackBar(content: Text('Please select a valid category')),
+      );
+      return;
+    }
+
+    if (_accountId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a valid account')),
       );
       return;
     }
@@ -198,6 +265,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       amount: double.parse(_amountController.text),
       description: _descriptionController.text,
       categoryId: _categoryId!,
+      accountId: _accountId!,
       type: _transactionType,
     );
 

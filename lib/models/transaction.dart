@@ -10,6 +10,7 @@ class Transaction {
   final String description;
   final DateTime timestamp;
   final String categoryId;
+  final String accountId;
   final DateTime created;
 
   Transaction({
@@ -20,6 +21,7 @@ class Transaction {
     required this.description,
     required this.timestamp,
     required this.categoryId,
+    required this.accountId,
     required this.created,
   });
 
@@ -34,7 +36,8 @@ class Transaction {
       description: record.getStringValue('description'),
       timestamp: DateTime.parse(record.getStringValue('timestamp')),
       categoryId: record.getStringValue('category'),
-      created: DateTime.parse(record.created), // Parse the string to DateTime
+      accountId: record.getStringValue('account'),
+      created: DateTime.parse(record.created),
     );
   }
 
@@ -46,7 +49,7 @@ class Transaction {
       'description': description,
       'timestamp': timestamp.toIso8601String(),
       'category': categoryId,
-      // Note: We don't need to include 'created' in toJson as it's automatically handled by PocketBase
+      'account': accountId,
     };
   }
 }

@@ -501,19 +501,17 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
       description: suggestedTransaction.description,
       timestamp: DateTime.now(),
       categoryId: suggestedTransaction.categoryId,
-      created: DateTime.now(), // Add this line
+      accountId: suggestedTransaction.accountId, // Add this line
+      created: DateTime.now(),
     );
 
     try {
       await widget.financeService.addTransaction(newTransaction);
-      // The transaction has been added successfully, but we don't need to do anything here
-      // The realtime subscription will update the UI
     } catch (e) {
-      // If there's an error, we might want to show it to the user
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add transaction: $e')),
       );
-      rethrow; // Re-throw the error so the calling method knows the operation failed
+      rethrow;
     }
   }
 }

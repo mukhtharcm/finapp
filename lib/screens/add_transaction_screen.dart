@@ -3,6 +3,7 @@ import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
+import 'package:finapp/models/account.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/utils/currency_utils.dart';
@@ -27,8 +28,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
   Category? _selectedCategory;
+  Account? _selectedAccount;
   final isLoading = signal(false);
   final AuthService authService = GetIt.instance<AuthService>();
+
+  @override
+  void initState() {
+    super.initState();
+    // Set default account if available
+    if (widget.financeService.accounts.isNotEmpty) {
+      _selectedAccount = widget.financeService.accounts.firstWhere(
+        (account) => account.isDefault,
+        orElse: () => widget.financeService.accounts.first,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +70,31 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Account Selection
+                      InkWell(
+                        onTap: _showAccountPicker,
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'Account',
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(_selectedAccount?.name ??
+                                  'Select an account'),
+                              Icon(_selectedAccount != null
+                                  ? Icons.check
+                                  : Icons.arrow_drop_down),
+                            ],
+                          ),
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(duration: 300.ms)
+                          .slideX(begin: -0.1, end: 0),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _descriptionController,
                         decoration: InputDecoration(
@@ -71,7 +110,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         },
                       )
                           .animate()
-                          .fadeIn(duration: 300.ms)
+                          .fadeIn(delay: 100.ms, duration: 300.ms)
                           .slideX(begin: -0.1, end: 0),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -94,7 +133,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         },
                       )
                           .animate()
-                          .fadeIn(delay: 100.ms, duration: 300.ms)
+                          .fadeIn(delay: 200.ms, duration: 300.ms)
                           .slideX(begin: -0.1, end: 0),
                       const SizedBox(height: 16),
                       InkWell(
@@ -118,7 +157,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         ),
                       )
                           .animate()
-                          .fadeIn(delay: 200.ms, duration: 300.ms)
+                          .fadeIn(delay: 300.ms, duration: 300.ms)
                           .slideX(begin: -0.1, end: 0),
                       const SizedBox(height: 32),
                       SizedBox(
@@ -135,7 +174,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         ),
                       )
                           .animate()
-                          .fadeIn(delay: 300.ms, duration: 300.ms)
+                          .fadeIn(delay: 400.ms, duration: 300.ms)
                           .slideY(begin: 0.1, end: 0),
                     ],
                   ),
@@ -179,6 +218,77 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     });
   }
 
+  void _showAccountPicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Watch((context) {
+          return ListView.builder(
+            itemCount: widget.financeService.accounts.length,
+            itemBuilder: (context, index) {
+              final account = widget.financeService.accounts[index];
+              return ListTile(
+                leading:
+                    Text(account.icon, style: const TextStyle(fontSize: 24)),
+                title: Text(account.name),
+                subtitle: Text(account.type),
+                onTap: () {
+                  setState(() {
+                    _selectedAccount = account;
+                  });
+                  Navigator.pop(context);
+                },
+              );
+            },
+          );
+        });
+      },
+    );
+  }
+
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate() &&
+        _selectedCategory != null &&
+        _selectedAccount != null) {
+      isLoading.value = true;
+      try {
+        final newTransaction = Transaction(
+          userId: widget.financeService.getCurrentUserId()!,
+          type: widget.transactionType,
+          amount: double.parse(_amountController.text),
+          description: _descriptionController.text,
+          timestamp: DateTime.now(),
+          categoryId: _selectedCategory!.id!,
+          accountId: _selectedAccount!.id!,
+          created: DateTime.now(),
+        );
+
+        await widget.financeService.addTransaction(newTransaction);
+
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add transaction: $e')),
+        );
+      } finally {
+        isLoading.value = false;
+      }
+    } else if (_selectedAccount == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select an account')),
+      );
+    } else if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category')),
+      );
+    }
+  }
+
   void _showCategoryPicker() {
     showModalBottomSheet(
       context: context,
@@ -207,38 +317,5 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         });
       },
     );
-  }
-
-  Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate() && _selectedCategory != null) {
-      isLoading.value = true;
-      try {
-        final newTransaction = Transaction(
-          userId: widget.financeService.getCurrentUserId()!,
-          type: widget.transactionType,
-          amount: double.parse(_amountController.text),
-          description: _descriptionController.text,
-          timestamp: DateTime.now(),
-          categoryId: _selectedCategory!.id!,
-          created: DateTime.now(), // Add this line
-        );
-
-        await widget.financeService.addTransaction(newTransaction);
-
-        if (mounted) {
-          Navigator.pop(context);
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add transaction: $e')),
-        );
-      } finally {
-        isLoading.value = false;
-      }
-    } else if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category')),
-      );
-    }
   }
 }
