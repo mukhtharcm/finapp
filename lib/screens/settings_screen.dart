@@ -1,9 +1,11 @@
+import 'package:finapp/screens/about_screen.dart';
 import 'package:finapp/screens/profile_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/theme_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class SettingsScreen extends StatelessWidget {
   final AuthService authService;
@@ -45,7 +47,7 @@ class SettingsScreen extends StatelessWidget {
                       }
                     },
                   ),
-                ),
+                ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.2, end: 0),
                 ListTile(
                   title: const Text('Theme Mode'),
                   leading: const Icon(Icons.brightness_6_outlined),
@@ -65,7 +67,10 @@ class SettingsScreen extends StatelessWidget {
                       }
                     },
                   ),
-                ),
+                )
+                    .animate()
+                    .fadeIn(delay: 100.ms, duration: 300.ms)
+                    .slideX(begin: 0.2, end: 0),
               ],
             ),
             _buildSection(
@@ -74,6 +79,8 @@ class SettingsScreen extends StatelessWidget {
               [
                 ListTile(
                   title: const Text('Profile'),
+                  subtitle:
+                      Watch((context) => Text(authService.userName.value)),
                   leading: const Icon(Icons.person_outline),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
@@ -86,15 +93,10 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     );
                   },
-                ),
-                ListTile(
-                  title: const Text('Security'),
-                  leading: const Icon(Icons.security),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    // TODO: Navigate to security settings
-                  },
-                ),
+                )
+                    .animate()
+                    .fadeIn(delay: 200.ms, duration: 300.ms)
+                    .slideX(begin: 0.2, end: 0),
               ],
             ),
             _buildSection(
@@ -102,29 +104,22 @@ class SettingsScreen extends StatelessWidget {
               'General',
               [
                 ListTile(
-                  title: const Text('Notifications'),
-                  leading: const Icon(Icons.notifications_outlined),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    // TODO: Navigate to notification settings
-                  },
-                ),
-                ListTile(
-                  title: const Text('Help & Support'),
-                  leading: const Icon(Icons.help_outline),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    // TODO: Navigate to help & support
-                  },
-                ),
-                ListTile(
                   title: const Text('About'),
+                  subtitle: const Text('App information & legal'),
                   leading: const Icon(Icons.info_outline),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    // TODO: Navigate to about page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AboutScreen(),
+                      ),
+                    );
                   },
-                ),
+                )
+                    .animate()
+                    .fadeIn(delay: 300.ms, duration: 300.ms)
+                    .slideX(begin: 0.2, end: 0),
               ],
             ),
             _buildSection(
@@ -136,14 +131,39 @@ class SettingsScreen extends StatelessWidget {
                     'Sign Out',
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
+                  subtitle: const Text('Log out of your account'),
                   leading: Icon(
                     Icons.logout,
                     color: theme.colorScheme.error,
                   ),
                   onTap: () async {
-                    await authService.logout();
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Sign Out'),
+                        content:
+                            const Text('Are you sure you want to sign out?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Sign Out'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true) {
+                      await authService.logout();
+                    }
                   },
-                ),
+                )
+                    .animate()
+                    .fadeIn(delay: 400.ms, duration: 300.ms)
+                    .slideX(begin: 0.2, end: 0),
               ],
             ),
           ],
