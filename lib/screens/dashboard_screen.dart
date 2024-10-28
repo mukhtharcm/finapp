@@ -1,3 +1,4 @@
+import 'package:finapp/screens/settings_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -28,8 +29,13 @@ class DashboardScreen extends StatelessWidget {
             style: theme.textTheme.headlineSmall),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: () => authService.logout(),
+            icon: const Icon(Icons.settings_rounded),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
           ),
           // Add dev mode menu
           if (kDebugMode)

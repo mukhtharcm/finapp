@@ -42,6 +42,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
         if (isAuthenticated.value) {
           _financeService.fetchCategories();
           _financeService.fetchTransactions();
+        } else {
+          // remove the navigation stack
+          Navigator.popUntil(context, (route) => route.isFirst);
         }
       });
     });
