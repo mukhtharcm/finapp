@@ -1,208 +1,166 @@
 import 'package:flutter/material.dart';
 import 'package:finapp/services/auth_service.dart';
-import 'package:finapp/utils/currency_utils.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:finapp/services/theme_service.dart';
 import 'package:get_it/get_it.dart';
+import 'package:signals/signals_flutter.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+class SettingsScreen extends StatelessWidget {
+  final AuthService authService;
+  final ThemeService themeService = GetIt.instance<ThemeService>();
 
-  @override
-  _SettingsScreenState createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  final AuthService _authService = GetIt.instance<AuthService>();
-  late String _selectedCurrency;
-  bool _isDarkMode = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedCurrency = _authService.preferredCurrency;
-    // TODO: Implement actual dark mode detection
-    _isDarkMode = false;
-  }
+  SettingsScreen({super.key, required this.authService});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Settings', style: theme.textTheme.headlineSmall),
       ),
-      body: ListView(
-        children: [
-          _buildSection(
-            'Account',
-            [
-              _buildListTile(
-                icon: Icons.person,
-                title: 'Profile',
-                subtitle: _authService.userName,
-                onTap: () {
-                  // TODO: Implement profile editing
-                },
-              ),
-              _buildListTile(
-                icon: Icons.email,
-                title: 'Email',
-                subtitle:
-                    _authService.currentUser?.data['email'] as String? ?? '',
-                onTap: () {
-                  // TODO: Implement email changing
-                },
-              ),
-            ],
-          ),
-          _buildSection(
-            'Preferences',
-            [
-              _buildListTile(
-                icon: Icons.monetization_on,
-                title: 'Currency',
-                subtitle: _selectedCurrency,
-                onTap: _showCurrencyPicker,
-              ),
-              SwitchListTile(
-                secondary:
-                    Icon(Icons.brightness_6, color: theme.colorScheme.primary),
-                title: Text('Dark Mode', style: theme.textTheme.titleMedium),
-                value: _isDarkMode,
-                onChanged: (value) {
-                  setState(() {
-                    _isDarkMode = value;
-                  });
-                  // TODO: Implement actual theme changing
-                },
-              ),
-            ],
-          ),
-          _buildSection(
-            'Support',
-            [
-              _buildListTile(
-                icon: Icons.help,
-                title: 'Help & FAQ',
-                onTap: () {
-                  // TODO: Implement Help & FAQ screen
-                },
-              ),
-              _buildListTile(
-                icon: Icons.contact_support,
-                title: 'Contact Us',
-                onTap: () {
-                  // TODO: Implement Contact Us functionality
-                },
-              ),
-            ],
-          ),
-          _buildSection(
-            'About',
-            [
-              _buildListTile(
-                icon: Icons.info,
-                title: 'App Version',
-                subtitle: '1.0.0',
-              ),
-              _buildListTile(
-                icon: Icons.description,
-                title: 'Terms of Service',
-                onTap: () {
-                  // TODO: Implement Terms of Service screen
-                },
-              ),
-              _buildListTile(
-                icon: Icons.privacy_tip,
-                title: 'Privacy Policy',
-                onTap: () {
-                  // TODO: Implement Privacy Policy screen
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ElevatedButton(
-              onPressed: () => _authService.logout(),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: theme.colorScheme.onError,
-                backgroundColor: theme.colorScheme.error,
-              ),
-              child: const Text('Log Out'),
+      body: Watch((context) {
+        return ListView(
+          children: [
+            _buildSection(
+              theme,
+              'Appearance',
+              [
+                ListTile(
+                  title: const Text('Theme'),
+                  leading: const Icon(Icons.palette_outlined),
+                  trailing: DropdownButton<String>(
+                    value: themeService.currentTheme.value,
+                    underline: const SizedBox(),
+                    items: themeService.availableThemes
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        themeService.setTheme(newValue);
+                      }
+                    },
+                  ),
+                ),
+                ListTile(
+                  title: const Text('Theme Mode'),
+                  leading: const Icon(Icons.brightness_6_outlined),
+                  trailing: DropdownButton<ThemeMode>(
+                    value: themeService.themeMode.value,
+                    underline: const SizedBox(),
+                    items: ThemeMode.values
+                        .map<DropdownMenuItem<ThemeMode>>((ThemeMode mode) {
+                      return DropdownMenuItem<ThemeMode>(
+                        value: mode,
+                        child: Text(themeService.getThemeModeString(mode)),
+                      );
+                    }).toList(),
+                    onChanged: (ThemeMode? newMode) {
+                      if (newMode != null) {
+                        themeService.setThemeMode(newMode);
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 24),
-        ]
-            .animate(interval: 50.ms)
-            .fadeIn(duration: 300.ms)
-            .slideY(begin: 0.1, end: 0),
-      ),
+            _buildSection(
+              theme,
+              'Account',
+              [
+                ListTile(
+                  title: const Text('Profile'),
+                  leading: const Icon(Icons.person_outline),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    // TODO: Navigate to profile settings
+                  },
+                ),
+                ListTile(
+                  title: const Text('Security'),
+                  leading: const Icon(Icons.security),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    // TODO: Navigate to security settings
+                  },
+                ),
+              ],
+            ),
+            _buildSection(
+              theme,
+              'General',
+              [
+                ListTile(
+                  title: const Text('Notifications'),
+                  leading: const Icon(Icons.notifications_outlined),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    // TODO: Navigate to notification settings
+                  },
+                ),
+                ListTile(
+                  title: const Text('Help & Support'),
+                  leading: const Icon(Icons.help_outline),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    // TODO: Navigate to help & support
+                  },
+                ),
+                ListTile(
+                  title: const Text('About'),
+                  leading: const Icon(Icons.info_outline),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    // TODO: Navigate to about page
+                  },
+                ),
+              ],
+            ),
+            _buildSection(
+              theme,
+              'Danger Zone',
+              [
+                ListTile(
+                  title: Text(
+                    'Sign Out',
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                  leading: Icon(
+                    Icons.logout,
+                    color: theme.colorScheme.error,
+                  ),
+                  onTap: () async {
+                    await authService.logout();
+                  },
+                ),
+              ],
+            ),
+          ],
+        );
+      }),
     );
   }
 
-  Widget _buildSection(String title, List<Widget> children) {
+  Widget _buildSection(ThemeData theme, String title, List<Widget> children) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         ...children,
+        const Divider(),
       ],
-    );
-  }
-
-  Widget _buildListTile({
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    VoidCallback? onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(title, style: Theme.of(context).textTheme.titleMedium),
-      subtitle: subtitle != null ? Text(subtitle) : null,
-      trailing: onTap != null ? Icon(Icons.chevron_right) : null,
-      onTap: onTap,
-    );
-  }
-
-  void _showCurrencyPicker() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Select Currency'),
-          content: DropdownButton<String>(
-            value: _selectedCurrency,
-            items: CurrencyUtils.getAllCurrencyCodes().map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child:
-                    Text('$value (${CurrencyUtils.getCurrencySymbol(value)})'),
-              );
-            }).toList(),
-            onChanged: (newValue) {
-              if (newValue != null) {
-                setState(() {
-                  _selectedCurrency = newValue;
-                });
-                _authService.updateUserProfile(preferredCurrency: newValue);
-                Navigator.of(context).pop();
-              }
-            },
-          ),
-        );
-      },
     );
   }
 }

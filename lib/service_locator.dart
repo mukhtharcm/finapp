@@ -1,3 +1,4 @@
+import 'package:finapp/services/theme_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
@@ -5,6 +6,8 @@ import 'package:pocketbase/pocketbase.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io' show Platform;
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
 
@@ -38,4 +41,7 @@ Future<void> setupServiceLocator() async {
   final financeService = FinanceService(getIt<PocketBase>());
   await financeService.initialize();
   getIt.registerLazySingleton(() => financeService);
+
+  final themeService = ThemeService(await SharedPreferences.getInstance());
+  getIt.registerLazySingleton(() => themeService);
 }

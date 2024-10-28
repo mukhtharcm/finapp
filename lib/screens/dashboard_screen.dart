@@ -33,7 +33,11 @@ class DashboardScreen extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                MaterialPageRoute(
+                  builder: (context) => SettingsScreen(
+                    authService: authService,
+                  ),
+                ),
               );
             },
           ),
