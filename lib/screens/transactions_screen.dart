@@ -104,18 +104,61 @@ class TransactionsScreen extends StatelessWidget {
   }
 
   Widget _buildFloatingActionButton(BuildContext context) {
+    final theme = Theme.of(context);
     return Watch((context) {
       final tabController = DefaultTabController.of(context);
       return FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddTransactionScreen(
-                financeService: financeService,
-                transactionType: tabController.index == 0
-                    ? TransactionType.income
-                    : TransactionType.expense,
+          showModalBottomSheet(
+            context: context,
+            builder: (context) => SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: Icon(
+                        Icons.trending_up_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
+                      title: const Text('Income'),
+                      subtitle: const Text('Add money you received'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddTransactionScreen(
+                              financeService: financeService,
+                              transactionType: TransactionType.income,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(
+                        Icons.trending_down_rounded,
+                        color: theme.colorScheme.error,
+                      ),
+                      title: const Text('Expense'),
+                      subtitle: const Text('Add money you spent'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddTransactionScreen(
+                              financeService: financeService,
+                              transactionType: TransactionType.expense,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           );
