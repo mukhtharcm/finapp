@@ -96,6 +96,7 @@ class TransactionsScreen extends StatelessWidget {
             account: account,
             currencySymbol: currencySymbol,
             animationIndex: index,
+            financeService: financeService,
           );
         },
       );

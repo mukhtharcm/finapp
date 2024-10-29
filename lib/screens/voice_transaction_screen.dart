@@ -444,7 +444,7 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditTransactionScreen(
+        builder: (context) => EditTransactionScreen.suggested(
           transaction: transaction,
           financeService: widget.financeService,
           onEdit: (editedTransaction) {
@@ -459,12 +459,80 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
   }
 
   Future<void> _addAllTransactions() async {
-    final transactionsToAdd =
-        List<SuggestedTransaction>.from(suggestedTransactions);
+    // First validate all transactions
+    final invalidTransactions = suggestedTransactions.where((transaction) {
+      final categoryExists = widget.financeService.categories
+          .any((category) => category.id == transaction.categoryId);
+      final accountExists = widget.financeService.accounts
+          .any((account) => account.id == transaction.accountId);
+      return !categoryExists || !accountExists;
+    }).toList();
+
+    if (invalidTransactions.isNotEmpty) {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Invalid Transactions'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Some transactions have invalid categories or accounts and cannot be added:',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 16),
+                ...invalidTransactions.map((transaction) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '• ${transaction.description}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    )),
+                const SizedBox(height: 16),
+                Text(
+                  'Please edit these transactions before adding them.',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _addValidTransactions();
+                },
+                child: const Text('Add Valid Only'),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
+    // If all transactions are valid, add them
+    await _addValidTransactions();
+  }
+
+  Future<void> _addValidTransactions() async {
+    final validTransactions = suggestedTransactions.where((transaction) {
+      final categoryExists = widget.financeService.categories
+          .any((category) => category.id == transaction.categoryId);
+      final accountExists = widget.financeService.accounts
+          .any((account) => account.id == transaction.accountId);
+      return categoryExists && accountExists;
+    }).toList();
+
     int successCount = 0;
     int failCount = 0;
 
-    for (var transaction in transactionsToAdd) {
+    for (var transaction in validTransactions) {
       try {
         await _addTransactionWithoutSnackbar(transaction);
         successCount++;
@@ -474,20 +542,28 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
       }
     }
 
-    suggestedTransactions.clear();
+    // Remove successfully added transactions
+    suggestedTransactions.removeWhere((t) => validTransactions.contains(t));
 
-    String message;
-    if (failCount == 0) {
-      message = 'All transactions added successfully';
-    } else if (successCount == 0) {
-      message = 'Failed to add any transactions';
-    } else {
-      message = '$successCount transactions added, $failCount failed';
+    if (context.mounted) {
+      String message;
+      if (failCount == 0) {
+        message = 'All transactions added successfully';
+      } else if (successCount == 0) {
+        message = 'Failed to add any transactions';
+      } else {
+        message = '$successCount transactions added, $failCount failed';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: failCount == 0
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.error,
+        ),
+      );
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   Future<void> _addTransactionWithoutSnackbar(

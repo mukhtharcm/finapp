@@ -68,6 +68,7 @@ class RecentTransactions extends StatelessWidget {
                 currencySymbol: currencySymbol,
                 showAccount: false,
                 compact: true, // Use compact style for dashboard
+                financeService: financeService,
               );
             },
           );

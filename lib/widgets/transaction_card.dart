@@ -1,9 +1,11 @@
+import 'package:finapp/services/finance_service.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:finapp/models/account.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/widgets/transaction_detail_dialog.dart';
+import 'package:finapp/screens/edit_transaction_screen.dart';
 
 class TransactionCard extends StatelessWidget {
   final Transaction transaction;
@@ -14,6 +16,7 @@ class TransactionCard extends StatelessWidget {
   final bool showAccount;
   final EdgeInsetsGeometry? margin;
   final bool compact;
+  final FinanceService? financeService;
 
   const TransactionCard({
     super.key,
@@ -25,6 +28,7 @@ class TransactionCard extends StatelessWidget {
     this.showAccount = true,
     this.margin,
     this.compact = false,
+    this.financeService,
   });
 
   @override
@@ -87,6 +91,8 @@ class TransactionCard extends StatelessWidget {
           ),
         ),
         onTap: () => _showTransactionDetails(context),
+        onLongPress:
+            financeService != null ? () => _showOptions(context) : null,
       ),
     );
 
@@ -114,6 +120,104 @@ class TransactionCard extends StatelessWidget {
         transaction: transaction,
         category: category,
         currencySymbol: currencySymbol,
+        financeService: financeService,
+      ),
+    );
+  }
+
+  void _showOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Edit Transaction'),
+              onTap: () {
+                Navigator.pop(context);
+                _editTransaction(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.delete,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                'Delete Transaction',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _deleteTransaction(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _editTransaction(BuildContext context) {
+    if (financeService == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTransactionScreen(
+          transaction: transaction,
+          financeService: financeService!,
+        ),
+      ),
+    );
+  }
+
+  void _deleteTransaction(BuildContext context) {
+    if (financeService == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Transaction'),
+        content:
+            const Text('Are you sure you want to delete this transaction?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await financeService!.deleteTransaction(transaction.id!);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Transaction deleted successfully'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Failed to delete transaction'),
+                    ),
+                  );
+                }
+              }
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }

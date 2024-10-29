@@ -3,23 +3,27 @@ import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:finapp/screens/edit_transaction_screen.dart';
+import 'package:finapp/services/finance_service.dart';
 
 class TransactionDetailDialog extends StatelessWidget {
   final Transaction transaction;
   final Category category;
   final String currencySymbol;
+  final FinanceService? financeService;
 
   const TransactionDetailDialog({
     super.key,
     required this.transaction,
     required this.category,
     required this.currencySymbol,
+    this.financeService,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dateFormat = DateFormat('MMM d, yyyy HH:mm');
+    final dateFormat = DateFormat('MMM d, y');
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -37,11 +41,26 @@ class TransactionDetailDialog extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  transaction.description,
-                  style: theme.textTheme.headlineSmall,
-                  textAlign: TextAlign.center,
-                ).animate().fadeIn(duration: 200.ms, delay: 50.ms),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        transaction.description,
+                        style: theme.textTheme.headlineSmall,
+                        textAlign: TextAlign.center,
+                      ).animate().fadeIn(duration: 200.ms, delay: 50.ms),
+                    ),
+                    if (financeService != null)
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _editTransaction(context);
+                        },
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 20),
                 _buildDetailRow(
                   context,
@@ -88,6 +107,18 @@ class TransactionDetailDialog extends StatelessWidget {
             ).animate().scale(duration: 200.ms, curve: Curves.easeOutBack),
           ),
         ],
+      ),
+    );
+  }
+
+  void _editTransaction(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTransactionScreen(
+          transaction: transaction,
+          financeService: financeService!,
+        ),
       ),
     );
   }

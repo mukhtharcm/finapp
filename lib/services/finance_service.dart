@@ -205,4 +205,22 @@ class FinanceService {
     pb.collection('user_categories').unsubscribe();
     pb.collection('accounts').unsubscribe();
   }
+
+  Future<void> updateTransaction(
+      String id, Transaction updatedTransaction) async {
+    if (!isInitialized.value) await initialize();
+
+    await pb.collection('transactions').update(
+          id,
+          body: updatedTransaction.toJson(),
+        );
+    // The realtime subscription will handle updating the list
+  }
+
+  Future<void> deleteTransaction(String id) async {
+    if (!isInitialized.value) await initialize();
+
+    await pb.collection('transactions').delete(id);
+    // The realtime subscription will handle removing from the list
+  }
 }
