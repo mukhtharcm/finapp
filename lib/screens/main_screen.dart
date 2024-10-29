@@ -1,3 +1,4 @@
+import 'package:finapp/screens/ai_hub_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/screens/dashboard_screen.dart';
@@ -105,12 +106,12 @@ class _MainScreenState extends State<MainScreen> {
       ),
       onPressed: () {
         Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                VoiceTransactionScreen(financeService: widget.financeService),
-          ),
-        );
+            context,
+            MaterialPageRoute(
+              builder: (context) => AIHubScreen(
+                financeService: widget.financeService,
+              ),
+            ));
       },
       child: Container(
         width: 60,
