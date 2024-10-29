@@ -93,6 +93,10 @@ class AccountsOverview extends StatelessWidget {
               final balance = financeService.getAccountBalance(account.id!);
               final isPositive = balance['balance']! >= 0;
 
+              final total = balance['income']! + balance['expenses']!;
+              final progressValue =
+                  total > 0 ? balance['income']! / total : 0.0;
+
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: InkWell(
@@ -190,8 +194,7 @@ class AccountsOverview extends StatelessWidget {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: LinearProgressIndicator(
-                            value: balance['income']! /
-                                (balance['income']! + balance['expenses']!),
+                            value: progressValue,
                             backgroundColor: theme.colorScheme.errorContainer
                                 .withOpacity(0.5),
                             valueColor: AlwaysStoppedAnimation<Color>(
