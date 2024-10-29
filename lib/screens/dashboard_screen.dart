@@ -9,6 +9,7 @@ import 'package:finapp/widgets/recent_transactions.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:finapp/widgets/accounts_overview.dart';
 
 class DashboardScreen extends StatelessWidget {
   final AuthService authService;
@@ -101,20 +102,31 @@ class DashboardScreen extends StatelessWidget {
                 // Force rebuild when either transactions or categories change
                 financeService.transactions.length;
                 financeService.categories.length;
-                return RecentTransactions(
-                  transactions: financeService.transactions,
-                  categories: financeService.categories,
-                  financeService: financeService,
+                return Column(
+                  children: [
+                    AccountsOverview(financeService: financeService)
+                        .animate()
+                        .fadeIn(delay: 200.ms, duration: 400.ms)
+                        .slideY(begin: 0.05, end: 0, duration: 400.ms),
+                    const SizedBox(height: 24),
+                    RecentTransactions(
+                      transactions: financeService.transactions,
+                      categories: financeService.categories,
+                      financeService: financeService,
+                    )
+                        .animate()
+                        .fadeIn(
+                            delay: 200.ms,
+                            duration: 400.ms,
+                            curve: Curves.easeInOut)
+                        .slideY(
+                            begin: 0.05,
+                            end: 0,
+                            duration: 400.ms,
+                            curve: Curves.easeOutCubic),
+                  ],
                 );
-              })
-                  .animate()
-                  .fadeIn(
-                      delay: 200.ms, duration: 400.ms, curve: Curves.easeInOut)
-                  .slideY(
-                      begin: 0.05,
-                      end: 0,
-                      duration: 400.ms,
-                      curve: Curves.easeOutCubic),
+              }),
             ],
           ),
         );
