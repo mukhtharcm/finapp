@@ -24,6 +24,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final TextEditingController _nameController = TextEditingController();
   String _selectedCurrency = 'USD';
 
+  @override
+  void initState() {
+    super.initState();
+    _nameController.text = widget.authService.userName.value;
+    _selectedCurrency = widget.authService.preferredCurrency.value;
+  }
+
   final List<OnboardingPage> _pages = [
     OnboardingPage(
       title: 'Welcome to FinApp',
