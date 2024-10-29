@@ -23,15 +23,15 @@ class FinanceService {
       isInitialized.value = true;
     }
 
-    // Set up realtime subscriptions
-    _subscribeToCategories();
-    _subscribeToAccounts();
-    _subscribeToTransactions();
-
     // Fetch data
     await fetchCategories();
     await fetchAccounts();
     await fetchTransactions();
+
+    // Set up realtime subscriptions
+    _subscribeToCategories();
+    _subscribeToAccounts();
+    _subscribeToTransactions();
   }
 
   String? getCurrentUserId() {
@@ -78,8 +78,10 @@ class FinanceService {
     categories.add(Category.fromRecord(record));
   }
 
-  void _subscribeToTransactions() {
-    pb.collection('transactions').subscribe('*', (e) {
+  Future<void> _subscribeToTransactions() async {
+    // print action
+    await pb.collection('transactions').subscribe('*', (e) {
+      debugPrint('Transaction event: ${e.action}');
       if (e.record == null) return; // Skip if record is null
 
       // print the action of the event
@@ -101,8 +103,8 @@ class FinanceService {
     });
   }
 
-  void _subscribeToCategories() {
-    pb.collection('user_categories').subscribe('*', (e) {
+  Future<void> _subscribeToCategories() async {
+    await pb.collection('user_categories').subscribe('*', (e) {
       if (e.record == null) return; // Skip if record is null
 
       if (e.action == 'create') {
@@ -118,11 +120,11 @@ class FinanceService {
     });
   }
 
-  void _subscribeToAccounts() {
+  Future<void> _subscribeToAccounts() async {
     final userId = getCurrentUserId();
     if (userId == null) return;
 
-    pb.collection('accounts').subscribe('*', (e) {
+    await pb.collection('accounts').subscribe('*', (e) {
       if (e.action == 'create') {
         accounts.add(Account.fromRecord(e.record!));
       } else if (e.action == 'update') {
@@ -200,10 +202,10 @@ class FinanceService {
     };
   }
 
-  void dispose() {
-    pb.collection('transactions').unsubscribe();
-    pb.collection('user_categories').unsubscribe();
-    pb.collection('accounts').unsubscribe();
+  Future<void> dispose() async {
+    await pb.collection('transactions').unsubscribe();
+    await pb.collection('user_categories').unsubscribe();
+    await pb.collection('accounts').unsubscribe();
   }
 
   Future<void> updateTransaction(
