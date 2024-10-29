@@ -1,3 +1,6 @@
+import 'package:finapp/models/account.dart';
+import 'package:finapp/services/finance_service.dart';
+import 'package:finapp/widgets/transaction_card.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
@@ -11,11 +14,13 @@ class RecentTransactions extends StatelessWidget {
   final ListSignal<Transaction> transactions;
   final ListSignal<Category> categories;
   final AuthService authService = GetIt.instance<AuthService>();
+  final FinanceService financeService;
 
   RecentTransactions({
     super.key,
     required this.transactions,
     required this.categories,
+    required this.financeService,
   });
 
   @override
@@ -46,38 +51,23 @@ class RecentTransactions extends StatelessWidget {
                 (c) => c.id == transaction.categoryId,
                 orElse: () => Category(name: 'Uncategorized', icon: '❓'),
               );
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: transaction.type == TransactionType.expense
-                        ? theme.colorScheme.errorContainer
-                        : theme.colorScheme.primaryContainer,
-                    child: Text(
-                      category.icon,
-                      style: TextStyle(
-                        fontSize: 24,
-                        color: transaction.type == TransactionType.expense
-                            ? theme.colorScheme.error
-                            : theme.colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                  title: Text(transaction.description,
-                      style: theme.textTheme.titleMedium),
-                  subtitle: Text(category.name),
-                  trailing: Text(
-                    '${transaction.type == TransactionType.expense ? '-' : ''}$currencySymbol${transaction.amount.toStringAsFixed(2)}',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: transaction.type == TransactionType.expense
-                          ? theme.colorScheme.error
-                          : theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  onTap: () =>
-                      _showTransactionDetails(context, transaction, category),
+              final account = financeService.accounts.firstWhere(
+                (a) => a.id == transaction.accountId,
+                orElse: () => Account(
+                  userId: transaction.userId,
+                  name: 'Unknown',
+                  type: 'unknown',
+                  icon: '❓',
                 ),
+              );
+
+              return TransactionCard(
+                transaction: transaction,
+                category: category,
+                account: account,
+                currencySymbol: currencySymbol,
+                showAccount: false,
+                compact: true, // Use compact style for dashboard
               );
             },
           );

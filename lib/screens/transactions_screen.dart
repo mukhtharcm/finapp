@@ -1,4 +1,5 @@
 import 'package:finapp/models/account.dart';
+import 'package:finapp/widgets/transaction_card.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/services/auth_service.dart';
@@ -78,6 +79,7 @@ class TransactionsScreen extends StatelessWidget {
             (c) => c.id == transaction.categoryId,
             orElse: () => Category(name: 'Uncategorized', icon: '❓'),
           );
+
           final account = financeService.accounts.firstWhere(
             (a) => a.id == transaction.accountId,
             orElse: () => Account(
@@ -88,33 +90,13 @@ class TransactionsScreen extends StatelessWidget {
             ),
           );
 
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: avatarColor,
-                child: Text(category.icon,
-                    style: TextStyle(fontSize: 24, color: textColor)),
-              ),
-              title: Text(transaction.description,
-                  style: Theme.of(context).textTheme.titleMedium),
-              subtitle: Text('${account.name} • ${account.type}'),
-              trailing: Text(
-                '${type == TransactionType.expense ? '-' : ''}$currencySymbol${transaction.amount.toStringAsFixed(2)}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: textColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              onTap: () =>
-                  _showTransactionDetails(context, transaction, category),
-            ),
-          ).animate().fadeIn(duration: 300.ms, delay: (50 * index).ms).slideX(
-              begin: 0.2,
-              end: 0,
-              duration: 300.ms,
-              delay: (50 * index).ms,
-              curve: Curves.easeOutCubic);
+          return TransactionCard(
+            transaction: transaction,
+            category: category,
+            account: account,
+            currencySymbol: currencySymbol,
+            animationIndex: index,
+          );
         },
       );
     });

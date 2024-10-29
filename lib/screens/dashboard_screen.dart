@@ -104,6 +104,7 @@ class DashboardScreen extends StatelessWidget {
                 return RecentTransactions(
                   transactions: financeService.transactions,
                   categories: financeService.categories,
+                  financeService: financeService,
                 );
               })
                   .animate()
