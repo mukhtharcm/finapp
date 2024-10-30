@@ -1,3 +1,4 @@
+import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/themes/classic_blue_theme.dart';
 import 'package:finapp/themes/modern_gold_theme.dart';
 import 'package:finapp/themes/modern_green_theme.dart';
@@ -7,6 +8,10 @@ import 'package:finapp/screens/auth_wrapper.dart';
 import 'package:finapp/service_locator.dart';
 import 'package:finapp/services/theme_service.dart';
 import 'package:finapp/blocs/theme/theme_bloc.dart';
+import 'package:finapp/blocs/transaction/transaction_bloc.dart';
+import 'package:finapp/blocs/account/account_bloc.dart';
+import 'package:finapp/blocs/category/category_bloc.dart';
+import 'package:finapp/blocs/finance/finance_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
@@ -22,9 +27,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeService = GetIt.instance<ThemeService>();
+    final financeService = GetIt.instance<FinanceService>();
 
-    return BlocProvider(
-      create: (context) => ThemeBloc(themeService: themeService),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => ThemeBloc(themeService: themeService),
+        ),
+        BlocProvider(
+          create: (context) => FinanceBloc(financeService: financeService),
+        ),
+        BlocProvider(
+          create: (context) => TransactionBloc(financeService: financeService),
+        ),
+        BlocProvider(
+          create: (context) => AccountBloc(financeService: financeService),
+        ),
+        BlocProvider(
+          create: (context) => CategoryBloc(financeService: financeService),
+        ),
+      ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, state) {
           return MaterialApp(
