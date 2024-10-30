@@ -39,7 +39,7 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton(() => authService);
 
   final financeService = FinanceService(getIt<PocketBase>());
-  await financeService.initialize();
+  financeService.initialize();
   getIt.registerLazySingleton(() => financeService);
 
   final themeService = ThemeService(await SharedPreferences.getInstance());
