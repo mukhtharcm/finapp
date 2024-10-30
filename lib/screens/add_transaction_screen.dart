@@ -4,10 +4,12 @@ import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:finapp/models/account.dart';
-import 'package:signals/signals_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/utils/currency_utils.dart';
 import 'package:get_it/get_it.dart';
+import 'package:signals/signals_flutter.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final FinanceService financeService;
@@ -29,12 +31,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _amountController = TextEditingController();
   Category? _selectedCategory;
   Account? _selectedAccount;
-  final isLoading = signal(false);
   final AuthService authService = GetIt.instance<AuthService>();
+  late final TransactionBloc _transactionBloc;
 
   @override
   void initState() {
     super.initState();
+    _transactionBloc = TransactionBloc(financeService: widget.financeService);
     // Set default account if available
     if (widget.financeService.accounts.isNotEmpty) {
       _selectedAccount = widget.financeService.accounts.firstWhere(
@@ -45,177 +48,199 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Watch((context) {
-      final currencySymbol =
-          CurrencyUtils.getCurrencySymbol(authService.preferredCurrency.value);
+  void dispose() {
+    _transactionBloc.close();
+    super.dispose();
+  }
 
-      final theme = Theme.of(context);
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.transactionType == TransactionType.income
-                ? 'Add Income'
-                : 'Add Expense',
-            style: theme.textTheme.headlineSmall,
-          ),
-        ),
-        body: Stack(
-          children: [
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Account Selection
-                      InkWell(
-                        onTap: _showAccountPicker,
-                        child: InputDecorator(
-                          decoration: InputDecoration(
-                            labelText: 'Account',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(_selectedAccount?.name ??
-                                  'Select an account'),
-                              Icon(_selectedAccount != null
-                                  ? Icons.check
-                                  : Icons.arrow_drop_down),
-                            ],
-                          ),
-                        ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 300.ms)
-                          .slideX(begin: -0.1, end: 0),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _descriptionController,
-                        decoration: InputDecoration(
-                          labelText: 'Description',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a description';
-                          }
-                          return null;
-                        },
-                      )
-                          .animate()
-                          .fadeIn(delay: 100.ms, duration: 300.ms)
-                          .slideX(begin: -0.1, end: 0),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _amountController,
-                        decoration: InputDecoration(
-                          labelText: 'Amount',
-                          prefixText: currencySymbol,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter an amount';
-                          }
-                          if (double.tryParse(value) == null) {
-                            return 'Please enter a valid number';
-                          }
-                          return null;
-                        },
-                      )
-                          .animate()
-                          .fadeIn(delay: 200.ms, duration: 300.ms)
-                          .slideX(begin: -0.1, end: 0),
-                      const SizedBox(height: 16),
-                      InkWell(
-                        onTap: _showCategoryPicker,
-                        child: InputDecorator(
-                          decoration: InputDecoration(
-                            labelText: 'Category',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(_selectedCategory?.name ??
-                                  'Select a category'),
-                              Icon(_selectedCategory != null
-                                  ? Icons.check
-                                  : Icons.arrow_drop_down),
-                            ],
-                          ),
-                        ),
-                      )
-                          .animate()
-                          .fadeIn(delay: 300.ms, duration: 300.ms)
-                          .slideX(begin: -0.1, end: 0),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _submitForm,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Text('Add Transaction',
-                              style: theme.textTheme.titleLarge),
-                        ),
-                      )
-                          .animate()
-                          .fadeIn(delay: 400.ms, duration: 300.ms)
-                          .slideY(begin: 0.1, end: 0),
-                    ],
-                  ),
-                ),
-              ),
+  @override
+  Widget build(BuildContext context) {
+    final currencySymbol =
+        CurrencyUtils.getCurrencySymbol(authService.preferredCurrency.value);
+    final theme = Theme.of(context);
+
+    return BlocProvider(
+      create: (context) => _transactionBloc,
+      child: BlocListener<TransactionBloc, TransactionState>(
+        listener: (context, state) {
+          if (state is TransactionSuccess) {
+            Navigator.pop(context);
+          } else if (state is TransactionFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text('Failed to add transaction: ${state.error}')),
+            );
+          }
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(
+              widget.transactionType == TransactionType.income
+                  ? 'Add Income'
+                  : 'Add Expense',
+              style: theme.textTheme.headlineSmall,
             ),
-            Watch((context) {
-              if (isLoading.value) {
-                return Container(
-                  color: Colors.black54,
-                  child: Center(
+          ),
+          body: Stack(
+            children: [
+              SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Form(
+                    key: _formKey,
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              theme.colorScheme.onPrimary),
+                        // Account Selection
+                        InkWell(
+                          onTap: _showAccountPicker,
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: 'Account',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(_selectedAccount?.name ??
+                                    'Select an account'),
+                                Icon(_selectedAccount != null
+                                    ? Icons.check
+                                    : Icons.arrow_drop_down),
+                              ],
+                            ),
+                          ),
                         )
-                            .animate(
-                                onPlay: (controller) => controller.repeat())
-                            .scaleXY(begin: 0.8, end: 1.2, duration: 600.ms)
-                            .then(delay: 600.ms)
-                            .scaleXY(begin: 1.2, end: 0.8, duration: 600.ms),
+                            .animate()
+                            .fadeIn(duration: 300.ms)
+                            .slideX(begin: -0.1, end: 0),
                         const SizedBox(height: 16),
-                        Text(
-                          'Adding transaction...',
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(color: Colors.white),
-                        ).animate().fadeIn(duration: 300.ms).then().shimmer(
-                            duration: 1.seconds, color: Colors.white54),
+                        TextFormField(
+                          controller: _descriptionController,
+                          decoration: InputDecoration(
+                            labelText: 'Description',
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a description';
+                            }
+                            return null;
+                          },
+                        )
+                            .animate()
+                            .fadeIn(delay: 100.ms, duration: 300.ms)
+                            .slideX(begin: -0.1, end: 0),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _amountController,
+                          decoration: InputDecoration(
+                            labelText: 'Amount',
+                            prefixText: currencySymbol,
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter an amount';
+                            }
+                            if (double.tryParse(value) == null) {
+                              return 'Please enter a valid number';
+                            }
+                            return null;
+                          },
+                        )
+                            .animate()
+                            .fadeIn(delay: 200.ms, duration: 300.ms)
+                            .slideX(begin: -0.1, end: 0),
+                        const SizedBox(height: 16),
+                        InkWell(
+                          onTap: _showCategoryPicker,
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: 'Category',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(_selectedCategory?.name ??
+                                    'Select a category'),
+                                Icon(_selectedCategory != null
+                                    ? Icons.check
+                                    : Icons.arrow_drop_down),
+                              ],
+                            ),
+                          ),
+                        )
+                            .animate()
+                            .fadeIn(delay: 300.ms, duration: 300.ms)
+                            .slideX(begin: -0.1, end: 0),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _submitForm,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text('Add Transaction',
+                                style: theme.textTheme.titleLarge),
+                          ),
+                        )
+                            .animate()
+                            .fadeIn(delay: 400.ms, duration: 300.ms)
+                            .slideY(begin: 0.1, end: 0),
                       ],
                     ),
                   ),
-                ).animate().fadeIn(duration: 300.ms);
-              }
-              return const SizedBox.shrink();
-            }),
-          ],
+                ),
+              ),
+              BlocBuilder<TransactionBloc, TransactionState>(
+                builder: (context, state) {
+                  if (state is TransactionLoading) {
+                    return Container(
+                      color: Colors.black54,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  theme.colorScheme.onPrimary),
+                            )
+                                .animate(
+                                    onPlay: (controller) => controller.repeat())
+                                .scaleXY(begin: 0.8, end: 1.2, duration: 600.ms)
+                                .then(delay: 600.ms)
+                                .scaleXY(
+                                    begin: 1.2, end: 0.8, duration: 600.ms),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Adding transaction...',
+                              style: theme.textTheme.titleMedium
+                                  ?.copyWith(color: Colors.white),
+                            ).animate().fadeIn(duration: 300.ms).then().shimmer(
+                                duration: 1.seconds, color: Colors.white54),
+                          ],
+                        ),
+                      ),
+                    ).animate().fadeIn(duration: 300.ms);
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
         ),
-      );
-    });
+      ),
+    );
   }
 
   void _showAccountPicker() {
@@ -253,31 +278,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     if (_formKey.currentState!.validate() &&
         _selectedCategory != null &&
         _selectedAccount != null) {
-      isLoading.value = true;
-      try {
-        final newTransaction = Transaction(
-          userId: widget.financeService.getCurrentUserId()!,
-          type: widget.transactionType,
-          amount: double.parse(_amountController.text),
-          description: _descriptionController.text,
-          timestamp: DateTime.now(),
-          categoryId: _selectedCategory!.id!,
-          accountId: _selectedAccount!.id!,
-          created: DateTime.now(),
-        );
+      final newTransaction = Transaction(
+        userId: widget.financeService.getCurrentUserId()!,
+        type: widget.transactionType,
+        amount: double.parse(_amountController.text),
+        description: _descriptionController.text,
+        timestamp: DateTime.now(),
+        categoryId: _selectedCategory!.id!,
+        accountId: _selectedAccount!.id!,
+        created: DateTime.now(),
+      );
 
-        await widget.financeService.addTransaction(newTransaction);
-
-        if (mounted) {
-          Navigator.pop(context);
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add transaction: $e')),
-        );
-      } finally {
-        isLoading.value = false;
-      }
+      _transactionBloc.add(AddTransaction(newTransaction));
     } else if (_selectedAccount == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select an account')),

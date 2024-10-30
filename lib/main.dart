@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:finapp/screens/auth_wrapper.dart';
 import 'package:finapp/service_locator.dart';
 import 'package:finapp/services/theme_service.dart';
-import 'package:signals/signals_flutter.dart';
+import 'package:finapp/blocs/theme/theme_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
 void main() async {
@@ -22,19 +23,21 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeService = GetIt.instance<ThemeService>();
 
-    return Watch((context) {
-      final currentTheme = themeService.currentTheme.value;
-      final themeMode = themeService.themeMode.value;
-
-      return MaterialApp(
-        title: 'FinApp',
-        debugShowCheckedModeBanner: false,
-        theme: _getThemeData(currentTheme, false),
-        darkTheme: _getThemeData(currentTheme, true),
-        themeMode: themeMode,
-        home: const AuthWrapper(),
-      );
-    });
+    return BlocProvider(
+      create: (context) => ThemeBloc(themeService: themeService),
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, state) {
+          return MaterialApp(
+            title: 'FinApp',
+            debugShowCheckedModeBanner: false,
+            theme: _getThemeData(state.currentTheme, false),
+            darkTheme: _getThemeData(state.currentTheme, true),
+            themeMode: state.themeMode,
+            home: const AuthWrapper(),
+          );
+        },
+      ),
+    );
   }
 
   ThemeData _getThemeData(String themeName, bool isDark) {

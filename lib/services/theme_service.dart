@@ -1,33 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:signals/signals.dart';
 
 class ThemeService {
   static const String _themeKey = 'selected_theme';
   static const String _themeModeKey = 'theme_mode';
   final SharedPreferences _prefs;
 
+  String _currentTheme = 'Ocean';
+  ThemeMode _themeMode = ThemeMode.system;
+
   ThemeService(this._prefs) {
     // Initialize currentTheme
     final savedTheme = _prefs.getString(_themeKey);
     if (savedTheme != null && availableThemes.contains(savedTheme)) {
-      currentTheme.value = savedTheme;
-    } else {
-      currentTheme.value = 'Ocean'; // Default theme
+      _currentTheme = savedTheme;
     }
 
     // Initialize themeMode
     final savedThemeMode = _prefs.getString(_themeModeKey);
     if (savedThemeMode != null) {
-      themeMode.value = ThemeMode.values.firstWhere(
+      _themeMode = ThemeMode.values.firstWhere(
         (mode) => mode.toString() == savedThemeMode,
         orElse: () => ThemeMode.system,
       );
     }
   }
 
-  final currentTheme = signal<String>('Ocean');
-  final themeMode = signal<ThemeMode>(ThemeMode.system);
+  String get currentTheme => _currentTheme;
+  ThemeMode get themeMode => _themeMode;
 
   final availableThemes = [
     'Ocean', // Classic Blue
@@ -38,13 +38,13 @@ class ThemeService {
 
   Future<void> setTheme(String theme) async {
     if (availableThemes.contains(theme)) {
-      currentTheme.value = theme;
+      _currentTheme = theme;
       await _prefs.setString(_themeKey, theme);
     }
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    themeMode.value = mode;
+    _themeMode = mode;
     await _prefs.setString(_themeModeKey, mode.toString());
   }
 

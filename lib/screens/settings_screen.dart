@@ -3,6 +3,8 @@ import 'package:finapp/screens/profile_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/theme_service.dart';
+import 'package:finapp/blocs/theme/theme_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -28,49 +30,64 @@ class SettingsScreen extends StatelessWidget {
               theme,
               'Appearance',
               [
-                ListTile(
-                  title: const Text('Theme'),
-                  leading: const Icon(Icons.palette_outlined),
-                  trailing: DropdownButton<String>(
-                    value: themeService.currentTheme.value,
-                    underline: const SizedBox(),
-                    items: themeService.availableThemes
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        themeService.setTheme(newValue);
-                      }
-                    },
-                  ),
-                ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.2, end: 0),
-                ListTile(
-                  title: const Text('Theme Mode'),
-                  leading: const Icon(Icons.brightness_6_outlined),
-                  trailing: DropdownButton<ThemeMode>(
-                    value: themeService.themeMode.value,
-                    underline: const SizedBox(),
-                    items: ThemeMode.values
-                        .map<DropdownMenuItem<ThemeMode>>((ThemeMode mode) {
-                      return DropdownMenuItem<ThemeMode>(
-                        value: mode,
-                        child: Text(themeService.getThemeModeString(mode)),
-                      );
-                    }).toList(),
-                    onChanged: (ThemeMode? newMode) {
-                      if (newMode != null) {
-                        themeService.setThemeMode(newMode);
-                      }
-                    },
-                  ),
-                )
-                    .animate()
-                    .fadeIn(delay: 100.ms, duration: 300.ms)
-                    .slideX(begin: 0.2, end: 0),
+                BlocBuilder<ThemeBloc, ThemeState>(
+                  builder: (context, state) {
+                    return ListTile(
+                      title: const Text('Theme'),
+                      leading: const Icon(Icons.palette_outlined),
+                      trailing: DropdownButton<String>(
+                        value: state.currentTheme,
+                        underline: const SizedBox(),
+                        items: themeService.availableThemes
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            context
+                                .read<ThemeBloc>()
+                                .add(ChangeTheme(newValue));
+                          }
+                        },
+                      ),
+                    )
+                        .animate()
+                        .fadeIn(duration: 300.ms)
+                        .slideX(begin: 0.2, end: 0);
+                  },
+                ),
+                BlocBuilder<ThemeBloc, ThemeState>(
+                  builder: (context, state) {
+                    return ListTile(
+                      title: const Text('Theme Mode'),
+                      leading: const Icon(Icons.brightness_6_outlined),
+                      trailing: DropdownButton<ThemeMode>(
+                        value: state.themeMode,
+                        underline: const SizedBox(),
+                        items: ThemeMode.values
+                            .map<DropdownMenuItem<ThemeMode>>((ThemeMode mode) {
+                          return DropdownMenuItem<ThemeMode>(
+                            value: mode,
+                            child: Text(themeService.getThemeModeString(mode)),
+                          );
+                        }).toList(),
+                        onChanged: (ThemeMode? newMode) {
+                          if (newMode != null) {
+                            context
+                                .read<ThemeBloc>()
+                                .add(ChangeThemeMode(newMode));
+                          }
+                        },
+                      ),
+                    )
+                        .animate()
+                        .fadeIn(delay: 100.ms, duration: 300.ms)
+                        .slideX(begin: 0.2, end: 0);
+                  },
+                ),
               ],
             ),
             _buildSection(
