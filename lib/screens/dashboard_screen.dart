@@ -40,8 +40,8 @@ class DashboardScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => SettingsScreen(
-                    authService: authService,
-                  ),
+                      // authService: authService,
+                      ),
                 ),
               );
             },

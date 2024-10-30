@@ -152,7 +152,9 @@ class MoreScreen extends StatelessWidget {
               subtitle: 'App preferences and theme',
               onTap: () => _navigateTo(
                 context,
-                SettingsScreen(authService: authService),
+                SettingsScreen(
+                    // authService: authService,
+                    ),
               ),
             ),
             _MenuItem(

@@ -1,3 +1,4 @@
+import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/themes/classic_blue_theme.dart';
 import 'package:finapp/themes/modern_gold_theme.dart';
@@ -12,6 +13,7 @@ import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/blocs/account/account_bloc.dart';
 import 'package:finapp/blocs/category/category_bloc.dart';
 import 'package:finapp/blocs/finance/finance_bloc.dart';
+import 'package:finapp/blocs/auth/auth_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
@@ -28,11 +30,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeService = GetIt.instance<ThemeService>();
     final financeService = GetIt.instance<FinanceService>();
+    final authService = GetIt.instance<AuthService>();
 
     return MultiBlocProvider(
       providers: [
         BlocProvider(
           create: (context) => ThemeBloc(themeService: themeService),
+        ),
+        BlocProvider(
+          create: (context) => AuthBloc(authService: authService),
         ),
         BlocProvider(
           create: (context) => FinanceBloc(financeService: financeService),
