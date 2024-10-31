@@ -4,23 +4,20 @@ import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/suggested_transaction.dart';
 import 'package:finapp/widgets/transaction_form.dart';
-import 'package:get_it/get_it.dart';
-import 'package:finapp/services/finance_service.dart';
 
 class EditTransactionScreen extends StatelessWidget {
   final Transaction? transaction;
   final SuggestedTransaction? suggestedTransaction;
   final Function(SuggestedTransaction)? onSuggestedEdit;
-  final FinanceService financeService = GetIt.instance<FinanceService>();
 
-  EditTransactionScreen({
+  const EditTransactionScreen({
     super.key,
     this.transaction,
     this.suggestedTransaction,
     this.onSuggestedEdit,
   });
 
-  EditTransactionScreen.suggested({
+  const EditTransactionScreen.suggested({
     super.key,
     required SuggestedTransaction transaction,
     required Function(SuggestedTransaction) onEdit,
@@ -52,7 +49,6 @@ class EditTransactionScreen extends StatelessWidget {
         body: TransactionForm(
           initialTransaction: transaction,
           initialSuggestedTransaction: suggestedTransaction,
-          // financeService: financeService,
           onSubmit: (editedTransaction) async {
             if (transaction != null) {
               context.read<TransactionBloc>().add(
@@ -63,7 +59,6 @@ class EditTransactionScreen extends StatelessWidget {
                   );
             } else if (suggestedTransaction != null &&
                 onSuggestedEdit != null) {
-              // Convert Transaction to SuggestedTransaction
               final suggested = SuggestedTransaction(
                 amount: editedTransaction.amount,
                 description: editedTransaction.description,
