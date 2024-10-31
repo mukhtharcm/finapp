@@ -155,8 +155,8 @@ class _MainScreenState extends State<MainScreen> {
                                             MaterialPageRoute(
                                               builder: (context) =>
                                                   AddTransactionScreen(
-                                                financeService:
-                                                    widget.financeService,
+                                                // financeService:
+                                                //     widget.financeService,
                                                 transactionType:
                                                     TransactionType.income,
                                               ),
@@ -182,8 +182,8 @@ class _MainScreenState extends State<MainScreen> {
                                             MaterialPageRoute(
                                               builder: (context) =>
                                                   AddTransactionScreen(
-                                                financeService:
-                                                    widget.financeService,
+                                                // financeService:
+                                                //     widget.financeService,
                                                 transactionType:
                                                     TransactionType.expense,
                                               ),

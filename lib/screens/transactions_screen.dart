@@ -129,7 +129,7 @@ class TransactionsScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) => AddTransactionScreen(
-                              financeService: financeService,
+                              // financeService: financeService,
                               transactionType: TransactionType.income,
                             ),
                           ),
@@ -149,7 +149,7 @@ class TransactionsScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) => AddTransactionScreen(
-                              financeService: financeService,
+                              // financeService: financeService,
                               transactionType: TransactionType.expense,
                             ),
                           ),
