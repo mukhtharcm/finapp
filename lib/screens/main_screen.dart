@@ -37,9 +37,7 @@ class _MainScreenState extends State<MainScreen> {
         authService: widget.authService,
         financeService: widget.financeService,
       ),
-      TransactionsScreen(
-        financeService: widget.financeService,
-      ),
+      TransactionsScreen(),
       InsightsScreen(
         financeService: widget.financeService,
       ),
