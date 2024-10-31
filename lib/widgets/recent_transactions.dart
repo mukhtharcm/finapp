@@ -1,6 +1,4 @@
 import 'package:finapp/models/account.dart';
-import 'package:finapp/service_locator.dart';
-import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/widgets/transaction_card.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/models/category.dart';
@@ -9,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/blocs/category/category_bloc.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
+import 'package:finapp/blocs/account/account_bloc.dart';
 
 class RecentTransactions extends StatefulWidget {
   const RecentTransactions({
@@ -25,10 +24,8 @@ class _RecentTransactionsState extends State<RecentTransactions> {
     super.initState();
     context.read<TransactionBloc>().add(FetchTransactions());
     context.read<CategoryBloc>().add(FetchCategories());
+    context.read<AccountBloc>().add(FetchAccounts());
   }
-
-  // use di to get the finance service
-  final FinanceService financeService = getIt<FinanceService>();
 
   @override
   Widget build(BuildContext context) {
@@ -66,48 +63,55 @@ class _RecentTransactionsState extends State<RecentTransactions> {
                   return BlocBuilder<CategoryBloc, CategoryState>(
                     builder: (context, categoryState) {
                       if (categoryState is CategorySuccess) {
-                        final transactions = transactionState.transactions!;
-                        final categories = categoryState.categories;
+                        return BlocBuilder<AccountBloc, AccountState>(
+                          builder: (context, accountState) {
+                            if (accountState is AccountSuccess) {
+                              final transactions =
+                                  transactionState.transactions!;
+                              final categories = categoryState.categories;
+                              final accounts = accountState.accounts;
 
-                        if (transactions.isEmpty) {
-                          return const Center(
-                            child: Text('No transactions yet'),
-                          );
-                        }
+                              if (transactions.isEmpty) {
+                                return const Center(
+                                  child: Text('No transactions yet'),
+                                );
+                              }
 
-                        return ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: transactions.length,
-                          itemBuilder: (context, index) {
-                            final transaction = transactions[index];
-                            final category = categories.firstWhere(
-                              (c) => c.id == transaction.categoryId,
-                              orElse: () => Category.empty(),
-                            );
-                            final account = financeService.accounts.firstWhere(
-                              (a) => a.id == transaction.accountId,
-                              orElse: () => Account.empty(),
-                            );
+                              return ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: transactions.length,
+                                itemBuilder: (context, index) {
+                                  final transaction = transactions[index];
+                                  final category = categories.firstWhere(
+                                    (c) => c.id == transaction.categoryId,
+                                    orElse: () => Category.empty(),
+                                  );
+                                  final account = accounts.firstWhere(
+                                    (a) => a.id == transaction.accountId,
+                                    orElse: () => Account.empty(),
+                                  );
 
-                            return TransactionCard(
-                              transaction: transaction,
-                              category: category,
-                              account: account,
-                              currencySymbol: currencySymbol,
-                              animationIndex: index,
-                              showAccount: false,
-                              compact: true,
-                            );
+                                  return TransactionCard(
+                                    transaction: transaction,
+                                    category: category,
+                                    account: account,
+                                    currencySymbol: currencySymbol,
+                                    animationIndex: index,
+                                    showAccount: false,
+                                    compact: true,
+                                  );
+                                },
+                              );
+                            }
+                            return const CircularProgressIndicator();
                           },
                         );
                       }
-
                       return const SizedBox.shrink();
                     },
                   );
                 }
-
                 return const SizedBox.shrink();
               },
             );
