@@ -136,7 +136,7 @@ class MoreScreen extends StatelessWidget {
               subtitle: 'Manage your financial accounts',
               onTap: () => _navigateTo(
                 context,
-                AccountsScreen(financeService: financeService),
+                AccountsScreen(),
               ),
             ),
           ],

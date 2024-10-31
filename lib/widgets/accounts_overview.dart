@@ -70,9 +70,7 @@ class _AccountsOverviewState extends State<AccountsOverview> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => AccountsScreen(
-                                      financeService: widget.financeService,
-                                    ),
+                                    builder: (context) => AccountsScreen(),
                                   ),
                                 );
                               },
