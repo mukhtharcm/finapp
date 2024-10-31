@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:finapp/models/transaction.dart';
-import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/models/category.dart';
 import 'package:finapp/models/account.dart';
-import 'package:signals/signals_flutter.dart';
 import 'package:finapp/models/suggested_transaction.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/category/category_bloc.dart';
+import 'package:finapp/blocs/account/account_bloc.dart';
 
 class TransactionForm extends StatefulWidget {
   final Transaction? initialTransaction;
   final SuggestedTransaction? initialSuggestedTransaction;
-  final FinanceService financeService;
   final Function(Transaction) onSubmit;
 
   const TransactionForm({
     super.key,
     this.initialTransaction,
     this.initialSuggestedTransaction,
-    required this.financeService,
     required this.onSubmit,
   });
 
@@ -39,6 +38,10 @@ class _TransactionFormState extends State<TransactionForm> {
     super.initState();
     final transaction = widget.initialTransaction;
     final suggestedTransaction = widget.initialSuggestedTransaction;
+
+    // Fetch initial data
+    context.read<CategoryBloc>().add(FetchCategories());
+    context.read<AccountBloc>().add(FetchAccounts());
 
     if (transaction != null) {
       _amountController =
@@ -71,17 +74,23 @@ class _TransactionFormState extends State<TransactionForm> {
   }
 
   String? _validateCategoryId(String categoryId) {
-    // Check if the category exists
-    final categoryExists = widget.financeService.categories
-        .any((category) => category.id == categoryId);
-    return categoryExists ? categoryId : null;
+    final state = context.read<CategoryBloc>().state;
+    if (state is CategorySuccess) {
+      final categoryExists =
+          state.categories.any((category) => category.id == categoryId);
+      return categoryExists ? categoryId : null;
+    }
+    return null;
   }
 
   String? _validateAccountId(String accountId) {
-    // Check if the account exists
-    final accountExists = widget.financeService.accounts
-        .any((account) => account.id == accountId);
-    return accountExists ? accountId : null;
+    final state = context.read<AccountBloc>().state;
+    if (state is AccountSuccess) {
+      final accountExists =
+          state.accounts.any((account) => account.id == accountId);
+      return accountExists ? accountId : null;
+    }
+    return null;
   }
 
   @override
@@ -167,63 +176,71 @@ class _TransactionFormState extends State<TransactionForm> {
               const SizedBox(height: 16),
 
               // Category Dropdown
-              Watch((context) {
-                final categories = widget.financeService.categories;
-                return DropdownButtonFormField<String>(
-                  value: _selectedCategoryId,
-                  decoration: InputDecoration(
-                    labelText: 'Category',
-                    errorStyle: TextStyle(color: theme.colorScheme.error),
-                  ),
-                  items: categories
-                      .map((category) => DropdownMenuItem(
-                            value: category.id,
-                            child: Text(category.name),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCategoryId = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Please select a category';
-                    }
-                    return null;
-                  },
-                );
-              }),
+              BlocBuilder<CategoryBloc, CategoryState>(
+                builder: (context, state) {
+                  if (state is CategorySuccess) {
+                    return DropdownButtonFormField<String>(
+                      value: _selectedCategoryId,
+                      decoration: InputDecoration(
+                        labelText: 'Category',
+                        errorStyle: TextStyle(color: theme.colorScheme.error),
+                      ),
+                      items: state.categories
+                          .map((category) => DropdownMenuItem(
+                                value: category.id,
+                                child: Text(category.name),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCategoryId = value;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Please select a category';
+                        }
+                        return null;
+                      },
+                    );
+                  }
+                  return const CircularProgressIndicator();
+                },
+              ),
               const SizedBox(height: 16),
 
               // Account Dropdown
-              Watch((context) {
-                final accounts = widget.financeService.accounts;
-                return DropdownButtonFormField<String>(
-                  value: _selectedAccountId,
-                  decoration: InputDecoration(
-                    labelText: 'Account',
-                    errorStyle: TextStyle(color: theme.colorScheme.error),
-                  ),
-                  items: accounts
-                      .map((account) => DropdownMenuItem(
-                            value: account.id,
-                            child: Text(account.name),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedAccountId = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Please select an account';
-                    }
-                    return null;
-                  },
-                );
-              }),
+              BlocBuilder<AccountBloc, AccountState>(
+                builder: (context, state) {
+                  if (state is AccountSuccess) {
+                    return DropdownButtonFormField<String>(
+                      value: _selectedAccountId,
+                      decoration: InputDecoration(
+                        labelText: 'Account',
+                        errorStyle: TextStyle(color: theme.colorScheme.error),
+                      ),
+                      items: state.accounts
+                          .map((account) => DropdownMenuItem(
+                                value: account.id,
+                                child: Text(account.name),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedAccountId = value;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Please select an account';
+                        }
+                        return null;
+                      },
+                    );
+                  }
+                  return const CircularProgressIndicator();
+                },
+              ),
               const SizedBox(height: 24),
 
               // Submit Button

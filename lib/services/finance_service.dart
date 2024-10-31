@@ -72,10 +72,20 @@ class FinanceService {
 
   Future<void> addCategory(Category category) async {
     if (!isInitialized.value) await initialize();
+    await pb.collection('user_categories').create(body: category.toJson());
+  }
 
-    final record =
-        await pb.collection('user_categories').create(body: category.toJson());
-    categories.add(Category.fromRecord(record));
+  Future<void> updateCategory(Category category) async {
+    if (!isInitialized.value) await initialize();
+    await pb.collection('user_categories').update(
+          category.id!,
+          body: category.toJson(),
+        );
+  }
+
+  Future<void> deleteCategory(String id) async {
+    if (!isInitialized.value) await initialize();
+    await pb.collection('user_categories').delete(id);
   }
 
   Future<void> _subscribeToTransactions() async {

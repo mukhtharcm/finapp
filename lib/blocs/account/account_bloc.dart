@@ -11,6 +11,9 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
 
   AccountBloc({required this.financeService}) : super(AccountInitial()) {
     on<FetchAccounts>(_onFetchAccounts);
+    on<AddAccount>(_onAddAccount);
+    on<UpdateAccount>(_onUpdateAccount);
+    on<DeleteAccount>(_onDeleteAccount);
   }
 
   Future<void> _onFetchAccounts(
@@ -21,6 +24,47 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     try {
       await financeService.fetchAccounts();
       emit(AccountSuccess(accounts: financeService.accounts));
+    } catch (e) {
+      emit(AccountFailure(error: e.toString()));
+    }
+  }
+
+  Future<void> _onAddAccount(
+    AddAccount event,
+    Emitter<AccountState> emit,
+  ) async {
+    emit(AccountLoading());
+    try {
+      await financeService.addAccount(event.account);
+      await _onFetchAccounts(FetchAccounts(), emit);
+    } catch (e) {
+      emit(AccountFailure(error: e.toString()));
+    }
+  }
+
+  Future<void> _onUpdateAccount(
+    UpdateAccount event,
+    Emitter<AccountState> emit,
+  ) async {
+    emit(AccountLoading());
+    try {
+      await financeService.updateAccount(
+        event.account,
+      );
+      await _onFetchAccounts(FetchAccounts(), emit);
+    } catch (e) {
+      emit(AccountFailure(error: e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteAccount(
+    DeleteAccount event,
+    Emitter<AccountState> emit,
+  ) async {
+    emit(AccountLoading());
+    try {
+      await financeService.deleteAccount(event.id);
+      await _onFetchAccounts(FetchAccounts(), emit);
     } catch (e) {
       emit(AccountFailure(error: e.toString()));
     }

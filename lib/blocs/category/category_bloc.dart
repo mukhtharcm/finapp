@@ -11,6 +11,9 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
 
   CategoryBloc({required this.financeService}) : super(CategoryInitial()) {
     on<FetchCategories>(_onFetchCategories);
+    on<AddCategory>(_onAddCategory);
+    on<UpdateCategory>(_onUpdateCategory);
+    on<DeleteCategory>(_onDeleteCategory);
   }
 
   Future<void> _onFetchCategories(
@@ -21,6 +24,45 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     try {
       await financeService.fetchCategories();
       emit(CategorySuccess(categories: financeService.categories));
+    } catch (e) {
+      emit(CategoryFailure(error: e.toString()));
+    }
+  }
+
+  Future<void> _onAddCategory(
+    AddCategory event,
+    Emitter<CategoryState> emit,
+  ) async {
+    emit(CategoryLoading());
+    try {
+      await financeService.addCategory(event.category);
+      await _onFetchCategories(FetchCategories(), emit);
+    } catch (e) {
+      emit(CategoryFailure(error: e.toString()));
+    }
+  }
+
+  Future<void> _onUpdateCategory(
+    UpdateCategory event,
+    Emitter<CategoryState> emit,
+  ) async {
+    emit(CategoryLoading());
+    try {
+      await financeService.updateCategory(event.category);
+      await _onFetchCategories(FetchCategories(), emit);
+    } catch (e) {
+      emit(CategoryFailure(error: e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteCategory(
+    DeleteCategory event,
+    Emitter<CategoryState> emit,
+  ) async {
+    emit(CategoryLoading());
+    try {
+      await financeService.deleteCategory(event.id);
+      await _onFetchCategories(FetchCategories(), emit);
     } catch (e) {
       emit(CategoryFailure(error: e.toString()));
     }

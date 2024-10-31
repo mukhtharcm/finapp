@@ -52,7 +52,7 @@ class EditTransactionScreen extends StatelessWidget {
         body: TransactionForm(
           initialTransaction: transaction,
           initialSuggestedTransaction: suggestedTransaction,
-          financeService: financeService,
+          // financeService: financeService,
           onSubmit: (editedTransaction) async {
             if (transaction != null) {
               context.read<TransactionBloc>().add(
