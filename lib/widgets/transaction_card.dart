@@ -1,7 +1,6 @@
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:finapp/models/account.dart';
-import 'package:finapp/services/finance_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/widgets/transaction_detail_dialog.dart';

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:finapp/models/transaction.dart';
-import 'package:finapp/models/category.dart';
-import 'package:finapp/models/account.dart';
 import 'package:finapp/models/suggested_transaction.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finapp/blocs/category/category_bloc.dart';

@@ -1,8 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:finapp/models/transaction.dart';
-import 'package:finapp/models/category.dart';
-import 'package:finapp/models/account.dart';
 import 'package:finapp/services/finance_service.dart';
 
 part 'transaction_event.dart';

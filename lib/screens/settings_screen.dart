@@ -6,7 +6,6 @@ import 'package:finapp/services/theme_service.dart';
 import 'package:finapp/blocs/theme/theme_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:signals/signals_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
 
