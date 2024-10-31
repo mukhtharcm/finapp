@@ -166,7 +166,6 @@ class TransactionCard extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => EditTransactionScreen(
           transaction: transaction,
-          financeService: context.read<FinanceService>(),
         ),
       ),
     );

@@ -446,7 +446,6 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
       MaterialPageRoute(
         builder: (context) => EditTransactionScreen.suggested(
           transaction: transaction,
-          financeService: widget.financeService,
           onEdit: (editedTransaction) {
             int index = suggestedTransactions.indexOf(transaction);
             if (index != -1) {

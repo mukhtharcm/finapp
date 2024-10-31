@@ -119,7 +119,6 @@ class TransactionDetailDialog extends StatelessWidget {
         MaterialPageRoute(
           builder: (context) => EditTransactionScreen(
             transaction: transaction,
-            financeService: financeService,
           ),
         ),
       );

@@ -1,57 +1,66 @@
-import 'package:finapp/widgets/transaction_form.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/suggested_transaction.dart';
+import 'package:finapp/widgets/transaction_form.dart';
+import 'package:get_it/get_it.dart';
 import 'package:finapp/services/finance_service.dart';
 
 class EditTransactionScreen extends StatelessWidget {
   final Transaction? transaction;
   final SuggestedTransaction? suggestedTransaction;
-  final FinanceService financeService;
   final Function(SuggestedTransaction)? onSuggestedEdit;
+  final FinanceService financeService = GetIt.instance<FinanceService>();
 
-  const EditTransactionScreen({
+  EditTransactionScreen({
     super.key,
-    required this.transaction,
-    required this.financeService,
-  })  : suggestedTransaction = null,
-        onSuggestedEdit = null;
+    this.transaction,
+    this.suggestedTransaction,
+    this.onSuggestedEdit,
+  });
 
-  // Named constructor for suggested transactions
-  const EditTransactionScreen.suggested({
+  EditTransactionScreen.suggested({
     super.key,
     required SuggestedTransaction transaction,
-    required this.financeService,
     required Function(SuggestedTransaction) onEdit,
   })  : suggestedTransaction = transaction,
-        transaction = null,
-        onSuggestedEdit = onEdit;
+        onSuggestedEdit = onEdit,
+        transaction = null;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Transaction', style: theme.textTheme.headlineSmall),
-      ),
-      body: TransactionForm(
-        initialTransaction: transaction,
-        initialSuggestedTransaction: suggestedTransaction,
-        financeService: financeService,
-        onSubmit: (editedTransaction) async {
-          try {
+
+    return BlocListener<TransactionBloc, TransactionState>(
+      listener: (context, state) {
+        if (state is TransactionSuccess) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Transaction updated successfully')),
+          );
+        } else if (state is TransactionFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${state.error}')),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Edit Transaction', style: theme.textTheme.headlineSmall),
+        ),
+        body: TransactionForm(
+          initialTransaction: transaction,
+          initialSuggestedTransaction: suggestedTransaction,
+          financeService: financeService,
+          onSubmit: (editedTransaction) async {
             if (transaction != null) {
-              await financeService.updateTransaction(
-                transaction!.id!,
-                editedTransaction,
-              );
-              if (context.mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Transaction updated successfully')),
-                );
-              }
+              context.read<TransactionBloc>().add(
+                    UpdateTransaction(
+                      id: transaction!.id!,
+                      transaction: editedTransaction,
+                    ),
+                  );
             } else if (suggestedTransaction != null &&
                 onSuggestedEdit != null) {
               // Convert Transaction to SuggestedTransaction
@@ -69,14 +78,8 @@ class EditTransactionScreen extends StatelessWidget {
                 Navigator.pop(context);
               }
             }
-          } catch (e) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Failed to update transaction')),
-              );
-            }
-          }
-        },
+          },
+        ),
       ),
     );
   }
