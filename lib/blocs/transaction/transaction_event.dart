@@ -17,3 +17,12 @@ class AddTransaction extends TransactionEvent {
 }
 
 class FetchTransactions extends TransactionEvent {}
+
+class DeleteTransaction extends TransactionEvent {
+  final String transactionId;
+
+  const DeleteTransaction(this.transactionId);
+
+  @override
+  List<Object> get props => [transactionId];
+}

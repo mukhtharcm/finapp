@@ -98,7 +98,6 @@ class _RecentTransactionsState extends State<RecentTransactions> {
                               animationIndex: index,
                               showAccount: false,
                               compact: true,
-                              financeService: financeService,
                             );
                           },
                         );

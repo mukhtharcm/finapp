@@ -1,11 +1,13 @@
-import 'package:finapp/services/finance_service.dart';
-import 'package:flutter/material.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:finapp/models/account.dart';
+import 'package:finapp/services/finance_service.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/widgets/transaction_detail_dialog.dart';
 import 'package:finapp/screens/edit_transaction_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 
 class TransactionCard extends StatelessWidget {
   final Transaction transaction;
@@ -16,7 +18,6 @@ class TransactionCard extends StatelessWidget {
   final bool showAccount;
   final EdgeInsetsGeometry? margin;
   final bool compact;
-  final FinanceService? financeService;
 
   const TransactionCard({
     super.key,
@@ -28,7 +29,6 @@ class TransactionCard extends StatelessWidget {
     this.showAccount = true,
     this.margin,
     this.compact = false,
-    this.financeService,
   });
 
   @override
@@ -91,8 +91,7 @@ class TransactionCard extends StatelessWidget {
           ),
         ),
         onTap: () => _showTransactionDetails(context),
-        onLongPress:
-            financeService != null ? () => _showOptions(context) : null,
+        onLongPress: () => _showOptions(context),
       ),
     );
 
@@ -120,7 +119,6 @@ class TransactionCard extends StatelessWidget {
         transaction: transaction,
         category: category,
         currencySymbol: currencySymbol,
-        financeService: financeService,
       ),
     );
   }
@@ -163,22 +161,18 @@ class TransactionCard extends StatelessWidget {
   }
 
   void _editTransaction(BuildContext context) {
-    if (financeService == null) return;
-
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => EditTransactionScreen(
           transaction: transaction,
-          financeService: financeService!,
+          financeService: context.read<FinanceService>(),
         ),
       ),
     );
   }
 
   void _deleteTransaction(BuildContext context) {
-    if (financeService == null) return;
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -191,26 +185,11 @@ class TransactionCard extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(context);
-              try {
-                await financeService!.deleteTransaction(transaction.id!);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Transaction deleted successfully'),
-                    ),
+              context.read<TransactionBloc>().add(
+                    DeleteTransaction(transaction.id!),
                   );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Failed to delete transaction'),
-                    ),
-                  );
-                }
-              }
             },
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,

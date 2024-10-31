@@ -15,6 +15,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       : super(TransactionInitial()) {
     on<AddTransaction>(_onAddTransaction);
     on<FetchTransactions>(_onFetchTransactions);
+    on<DeleteTransaction>(_onDeleteTransaction);
   }
 
   Future<void> _onAddTransaction(
@@ -38,6 +39,19 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     try {
       await financeService.fetchTransactions();
       emit(TransactionSuccess(transactions: financeService.transactions));
+    } catch (e) {
+      emit(TransactionFailure(error: e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteTransaction(
+    DeleteTransaction event,
+    Emitter<TransactionState> emit,
+  ) async {
+    emit(TransactionLoading());
+    try {
+      await financeService.deleteTransaction(event.transactionId);
+      await _onFetchTransactions(FetchTransactions(), emit);
     } catch (e) {
       emit(TransactionFailure(error: e.toString()));
     }
