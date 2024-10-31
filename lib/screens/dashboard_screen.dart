@@ -109,11 +109,7 @@ class DashboardScreen extends StatelessWidget {
                         .fadeIn(delay: 200.ms, duration: 400.ms)
                         .slideY(begin: 0.05, end: 0, duration: 400.ms),
                     const SizedBox(height: 24),
-                    RecentTransactions(
-                      transactions: financeService.transactions,
-                      categories: financeService.categories,
-                      financeService: financeService,
-                    )
+                    RecentTransactions()
                         .animate()
                         .fadeIn(
                             delay: 200.ms,

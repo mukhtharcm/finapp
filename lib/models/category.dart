@@ -15,6 +15,14 @@ class Category {
     this.isDefault = false,
   });
 
+  factory Category.empty() {
+    return Category(
+      userId: '',
+      name: '',
+      icon: '',
+    );
+  }
+
   factory Category.fromRecord(RecordModel record) {
     return Category(
       id: record.id,

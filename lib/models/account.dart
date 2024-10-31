@@ -19,6 +19,17 @@ class Account {
     this.initialBalance = 0.0,
   });
 
+  factory Account.empty() {
+    return Account(
+      userId: '',
+      id: '',
+      name: '',
+      type: '',
+      icon: '',
+      isDefault: false,
+    );
+  }
+
   factory Account.fromRecord(RecordModel record) {
     return Account(
       id: record.id,
