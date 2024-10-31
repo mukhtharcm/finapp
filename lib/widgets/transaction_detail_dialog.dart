@@ -5,19 +5,21 @@ import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/screens/edit_transaction_screen.dart';
 import 'package:finapp/services/finance_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/transaction/transaction_bloc.dart';
+import 'package:get_it/get_it.dart';
 
 class TransactionDetailDialog extends StatelessWidget {
   final Transaction transaction;
   final Category category;
   final String currencySymbol;
-  final FinanceService? financeService;
+  final FinanceService financeService = GetIt.instance<FinanceService>();
 
-  const TransactionDetailDialog({
+  TransactionDetailDialog({
     super.key,
     required this.transaction,
     required this.category,
     required this.currencySymbol,
-    this.financeService,
   });
 
   @override
@@ -51,14 +53,13 @@ class TransactionDetailDialog extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ).animate().fadeIn(duration: 200.ms, delay: 50.ms),
                     ),
-                    if (financeService != null)
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _editTransaction(context);
-                        },
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _editTransaction(context);
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -111,16 +112,35 @@ class TransactionDetailDialog extends StatelessWidget {
     );
   }
 
-  void _editTransaction(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditTransactionScreen(
-          transaction: transaction,
-          financeService: financeService!,
+  void _editTransaction(BuildContext context) async {
+    try {
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditTransactionScreen(
+            transaction: transaction,
+            financeService: financeService,
+          ),
         ),
-      ),
-    );
+      );
+
+      if (context.mounted) {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+
+        context.read<TransactionBloc>().add(FetchTransactions());
+      }
+    } catch (e) {
+      debugPrint('Error during transaction edit: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error updating transaction'),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildDetailRow(
