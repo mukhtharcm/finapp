@@ -12,9 +12,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 final getIt = GetIt.instance;
 
 String _getPocketBaseUrl() {
-  if (kDebugMode && Platform.isAndroid) {
-    return 'http://192.168.209.209:8090';
-  }
+  // if (kDebugMode && Platform.isAndroid) {
+  //   return 'http://192.168.209.209:8090';
+  // }
   return kDebugMode ? 'http://pb.76545689.xyz' : 'https://finbot.76545689.xyz';
 }
 

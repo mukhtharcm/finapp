@@ -31,32 +31,21 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  late List<Widget> _screens;
-
-  @override
-  void initState() {
-    super.initState();
-    _screens = [
-      DashboardScreen(
-        authService: widget.authService,
-        financeService: widget.financeService,
-      ),
-      TransactionsScreen(),
-      InsightsScreen(
-        financeService: widget.financeService,
-        authService: widget.authService,
-      ),
-      MoreScreen(
-        authService: widget.authService,
-        financeService: widget.financeService,
-      ),
-    ];
-
-    // Use blocs instead of direct service calls
-    context.read<TransactionBloc>().add(FetchTransactions());
-    context.read<CategoryBloc>().add(FetchCategories());
-    context.read<AccountBloc>().add(FetchAccounts());
-  }
+  late final List<Widget> _screens = [
+    DashboardScreen(
+      authService: widget.authService,
+      financeService: widget.financeService,
+    ),
+    const TransactionsScreen(),
+    InsightsScreen(
+      financeService: widget.financeService,
+      authService: widget.authService,
+    ),
+    MoreScreen(
+      authService: widget.authService,
+      financeService: widget.financeService,
+    ),
+  ];
 
   void _onItemTapped(int index) {
     setState(() {

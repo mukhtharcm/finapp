@@ -13,21 +13,8 @@ import 'package:finapp/blocs/account/account_bloc.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-class TransactionsScreen extends StatefulWidget {
+class TransactionsScreen extends StatelessWidget {
   const TransactionsScreen({super.key});
-
-  @override
-  State<TransactionsScreen> createState() => _TransactionsScreenState();
-}
-
-class _TransactionsScreenState extends State<TransactionsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<TransactionBloc>().add(FetchTransactions());
-    context.read<CategoryBloc>().add(FetchCategories());
-    context.read<AccountBloc>().add(FetchAccounts());
-  }
 
   @override
   Widget build(BuildContext context) {

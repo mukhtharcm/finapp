@@ -10,23 +10,8 @@ import 'package:finapp/blocs/auth/auth_bloc.dart';
 import 'package:finapp/blocs/account/account_bloc.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-class RecentTransactions extends StatefulWidget {
-  const RecentTransactions({
-    super.key,
-  });
-
-  @override
-  State<RecentTransactions> createState() => _RecentTransactionsState();
-}
-
-class _RecentTransactionsState extends State<RecentTransactions> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<TransactionBloc>().add(FetchTransactions());
-    context.read<CategoryBloc>().add(FetchCategories());
-    context.read<AccountBloc>().add(FetchAccounts());
-  }
+class RecentTransactions extends StatelessWidget {
+  const RecentTransactions({super.key});
 
   @override
   Widget build(BuildContext context) {

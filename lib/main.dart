@@ -38,7 +38,8 @@ class MyApp extends StatelessWidget {
           create: (context) => ThemeBloc(themeService: themeService),
         ),
         BlocProvider(
-          create: (context) => AuthBloc(authService: authService),
+          create: (context) =>
+              AuthBloc(authService: authService)..add(InitializeAuth()),
         ),
         BlocProvider(
           create: (context) => FinanceBloc(financeService: financeService),
@@ -53,17 +54,27 @@ class MyApp extends StatelessWidget {
           create: (context) => CategoryBloc(financeService: financeService),
         ),
       ],
-      child: BlocBuilder<ThemeBloc, ThemeState>(
-        builder: (context, state) {
-          return MaterialApp(
-            title: 'FinApp',
-            debugShowCheckedModeBanner: false,
-            theme: _getThemeData(state.currentTheme, false),
-            darkTheme: _getThemeData(state.currentTheme, true),
-            themeMode: state.themeMode,
-            home: const AuthWrapper(),
-          );
+      child: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state.isAuthenticated) {
+            // Fetch initial data when user is authenticated
+            context.read<TransactionBloc>().add(FetchTransactions());
+            context.read<CategoryBloc>().add(FetchCategories());
+            context.read<AccountBloc>().add(FetchAccounts());
+          }
         },
+        child: BlocBuilder<ThemeBloc, ThemeState>(
+          builder: (context, state) {
+            return MaterialApp(
+              title: 'FinApp',
+              debugShowCheckedModeBanner: false,
+              theme: _getThemeData(state.currentTheme, false),
+              darkTheme: _getThemeData(state.currentTheme, true),
+              themeMode: state.themeMode,
+              home: const AuthWrapper(),
+            );
+          },
+        ),
       ),
     );
   }

@@ -12,7 +12,7 @@ import 'package:finapp/blocs/auth/auth_bloc.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:finapp/widgets/account_card.dart';
 
-class AccountsOverview extends StatefulWidget {
+class AccountsOverview extends StatelessWidget {
   final AuthService authService;
   final FinanceService financeService;
 
@@ -21,18 +21,6 @@ class AccountsOverview extends StatefulWidget {
     required this.authService,
     required this.financeService,
   });
-
-  @override
-  _AccountsOverviewState createState() => _AccountsOverviewState();
-}
-
-class _AccountsOverviewState extends State<AccountsOverview> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<AccountBloc>().add(FetchAccounts());
-    context.read<TransactionBloc>().add(FetchTransactions());
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,8 +131,7 @@ class _AccountsOverviewState extends State<AccountsOverview> {
                             itemCount: accounts.length,
                             itemBuilder: (context, index) {
                               final account = accounts[index];
-                              final balance =
-                                  widget.financeService.getAccountBalance(
+                              final balance = financeService.getAccountBalance(
                                 account.id!,
                                 transactions,
                               );
