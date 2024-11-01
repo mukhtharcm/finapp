@@ -1,10 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/services/finance_service.dart';
-import 'package:finapp/services/auth_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:signals/signals_flutter.dart';
 import 'dart:async';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
@@ -14,7 +12,9 @@ import 'package:finapp/models/category.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/screens/edit_transaction_screen.dart';
 import 'dart:io';
-import 'package:get_it/get_it.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/category/category_bloc.dart';
+import 'package:finapp/blocs/account/account_bloc.dart';
 
 class VoiceTransactionScreen extends StatefulWidget {
   final FinanceService financeService;
@@ -27,17 +27,15 @@ class VoiceTransactionScreen extends StatefulWidget {
 
 class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
     with SingleTickerProviderStateMixin {
-  final isRecording = signal(false);
-  final isProcessing = signal(false);
-  final recordingDuration = signal(0);
-  final suggestedTransactions = ListSignal<SuggestedTransaction>([]);
+  bool _isRecording = false;
+  bool _isProcessing = false;
+  int _recordingDuration = 0;
+  List<SuggestedTransaction> _suggestedTransactions = [];
   Timer? _timer;
   late AudioRecorder _audioRecorder;
 
   late AnimationController _addingController;
   final Map<SuggestedTransaction, bool> _addingStatus = {};
-
-  final AuthService _authService = GetIt.instance<AuthService>();
 
   @override
   void initState() {
@@ -68,54 +66,45 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Watch((context) {
-              if (isProcessing.value) {
-                return _buildProcessingUI(theme);
-              } else if (suggestedTransactions.isNotEmpty) {
-                return _buildSuggestedTransactionsList(theme);
-              }
-              return _buildRecordingButton(theme);
-            }),
+            if (_isProcessing)
+              _buildProcessingUI(theme)
+            else if (_suggestedTransactions.isNotEmpty)
+              _buildSuggestedTransactionsList(theme)
+            else
+              _buildRecordingButton(theme),
             const SizedBox(height: 20),
-            Watch((context) {
-              if (!isProcessing.value && suggestedTransactions.isEmpty) {
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: isRecording.value
-                      ? Column(
-                          children: [
-                            Text(
-                              'Recording...',
-                              style: theme.textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              '${recordingDuration.value} seconds',
-                              style: theme.textTheme.titleMedium,
-                            ),
-                          ],
-                        )
-                      : Text(
-                          'Tap and hold to record',
-                          style: theme.textTheme.titleLarge,
-                        ),
-                );
-              }
-              return const SizedBox.shrink();
-            }),
+            if (!_isProcessing && _suggestedTransactions.isEmpty)
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: _isRecording
+                    ? Column(
+                        children: [
+                          Text(
+                            'Recording...',
+                            style: theme.textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '$_recordingDuration seconds',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                        ],
+                      )
+                    : Text(
+                        'Tap and hold to record',
+                        style: theme.textTheme.titleLarge,
+                      ),
+              ),
           ],
         ),
       ),
-      floatingActionButton: Watch((context) {
-        if (suggestedTransactions.isNotEmpty) {
-          return FloatingActionButton.extended(
-            onPressed: _addAllTransactions,
-            icon: Icon(Icons.add_rounded),
-            label: Text('Add All'),
-          ).animate().scale(delay: 300.ms, duration: 200.ms);
-        }
-        return const SizedBox.shrink();
-      }),
+      floatingActionButton: _suggestedTransactions.isNotEmpty
+          ? FloatingActionButton.extended(
+              onPressed: _addAllTransactions,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Add All'),
+            ).animate().scale(delay: 300.ms, duration: 200.ms)
+          : null,
     );
   }
 
@@ -129,12 +118,12 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
         height: 120,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isRecording.value
+          color: _isRecording
               ? theme.colorScheme.error
               : theme.colorScheme.primary,
           boxShadow: [
             BoxShadow(
-              color: (isRecording.value
+              color: (_isRecording
                       ? theme.colorScheme.error
                       : theme.colorScheme.primary)
                   .withOpacity(0.3),
@@ -144,7 +133,7 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
           ],
         ),
         child: Icon(
-          isRecording.value ? Icons.stop : Icons.mic,
+          _isRecording ? Icons.stop : Icons.mic,
           color: theme.colorScheme.onPrimary,
           size: 60,
         ),
@@ -186,9 +175,9 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
   Widget _buildSuggestedTransactionsList(ThemeData theme) {
     return Expanded(
       child: ListView.builder(
-        itemCount: suggestedTransactions.length,
+        itemCount: _suggestedTransactions.length,
         itemBuilder: (context, index) {
-          final transaction = suggestedTransactions[index];
+          final transaction = _suggestedTransactions[index];
           final category = _findCategory(transaction.categoryId);
           final bool isValidCategory = category != null;
 
@@ -231,7 +220,7 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
                   children: [
                     Text(
                       transaction.formattedAmount(
-                          _authService.preferredCurrency.value),
+                          widget.financeService.getCurrentUserId()!),
                       style: TextStyle(
                         color:
                             transaction.type == SuggestedTransactionType.expense
@@ -284,8 +273,11 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
 
   Category? _findCategory(String categoryId) {
     try {
-      return widget.financeService.categories
-          .firstWhere((c) => c.id == categoryId);
+      final categoryState = context.read<CategoryBloc>().state;
+      if (categoryState is CategorySuccess) {
+        return categoryState.categories.firstWhere((c) => c.id == categoryId);
+      }
+      return null;
     } catch (e) {
       return null;
     }
@@ -327,10 +319,15 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
             '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
         await _audioRecorder.start(RecordConfig(), path: path);
 
-        isRecording.value = true;
-        recordingDuration.value = 0;
+        setState(() {
+          _isRecording = true;
+          _recordingDuration = 0;
+        });
+
         _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          recordingDuration.value++;
+          setState(() {
+            _recordingDuration++;
+          });
         });
       }
     } catch (e) {
@@ -339,24 +336,30 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
   }
 
   Future<void> _stopRecording() async {
-    if (!isRecording.value) return;
+    if (!_isRecording) return;
 
     try {
-      isRecording.value = false;
+      setState(() {
+        _isRecording = false;
+      });
       _timer?.cancel();
       final path = await _audioRecorder.stop();
-      isProcessing.value = true;
+
+      setState(() {
+        _isProcessing = true;
+      });
 
       if (path != null) {
         await _processAudio(path);
       } else {
         debugPrint('Recording failed: no audio file was created.');
-        // TODO: Show an error message to the user
       }
     } catch (e) {
       debugPrint('Error stopping recording: $e');
     } finally {
-      isProcessing.value = false;
+      setState(() {
+        _isProcessing = false;
+      });
     }
   }
 
@@ -380,25 +383,25 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
             Options(headers: {'Authorization': 'Bearer ${pb.authStore.token}'}),
       );
 
-      // Check if response.data is already a List or if it needs to be decoded
       final List<dynamic> transactionsJson =
           response.data is String ? json.decode(response.data) : response.data;
 
-      suggestedTransactions.value = transactionsJson
-          .map((json) => SuggestedTransaction.fromJson(json))
-          .toList();
+      setState(() {
+        _suggestedTransactions = transactionsJson
+            .map((json) => SuggestedTransaction.fromJson(json))
+            .toList();
+      });
 
-      // Delete the audio file after processing
       final file = File(audioPath);
       if (await file.exists()) {
         await file.delete();
-        debugPrint('Deleted temporary audio file: $audioPath');
       }
     } catch (e) {
       debugPrint('Error sending audio to server: $e');
-      // TODO: Show an error message to the user
     } finally {
-      isProcessing.value = false;
+      setState(() {
+        _isProcessing = false;
+      });
     }
   }
 
@@ -415,7 +418,7 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
       await _addingController.forward();
 
       setState(() {
-        suggestedTransactions.remove(suggestedTransaction);
+        _suggestedTransactions.remove(suggestedTransaction);
         _addingStatus.remove(suggestedTransaction);
       });
 
@@ -447,9 +450,9 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
         builder: (context) => EditTransactionScreen.suggested(
           transaction: transaction,
           onEdit: (editedTransaction) {
-            int index = suggestedTransactions.indexOf(transaction);
+            int index = _suggestedTransactions.indexOf(transaction);
             if (index != -1) {
-              suggestedTransactions[index] = editedTransaction;
+              _suggestedTransactions[index] = editedTransaction;
             }
           },
         ),
@@ -459,11 +462,17 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
 
   Future<void> _addAllTransactions() async {
     // First validate all transactions
-    final invalidTransactions = suggestedTransactions.where((transaction) {
-      final categoryExists = widget.financeService.categories
-          .any((category) => category.id == transaction.categoryId);
-      final accountExists = widget.financeService.accounts
-          .any((account) => account.id == transaction.accountId);
+    final invalidTransactions = _suggestedTransactions.where((transaction) {
+      final categoryState = context.read<CategoryBloc>().state;
+      final accountState = context.read<AccountBloc>().state;
+
+      final categoryExists = categoryState is CategorySuccess &&
+          categoryState.categories
+              .any((category) => category.id == transaction.categoryId);
+      final accountExists = accountState is AccountSuccess &&
+          accountState.accounts
+              .any((account) => account.id == transaction.accountId);
+
       return !categoryExists || !accountExists;
     }).toList();
 
@@ -520,11 +529,17 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
   }
 
   Future<void> _addValidTransactions() async {
-    final validTransactions = suggestedTransactions.where((transaction) {
-      final categoryExists = widget.financeService.categories
-          .any((category) => category.id == transaction.categoryId);
-      final accountExists = widget.financeService.accounts
-          .any((account) => account.id == transaction.accountId);
+    final validTransactions = _suggestedTransactions.where((transaction) {
+      final categoryState = context.read<CategoryBloc>().state;
+      final accountState = context.read<AccountBloc>().state;
+
+      final categoryExists = categoryState is CategorySuccess &&
+          categoryState.categories
+              .any((category) => category.id == transaction.categoryId);
+      final accountExists = accountState is AccountSuccess &&
+          accountState.accounts
+              .any((account) => account.id == transaction.accountId);
+
       return categoryExists && accountExists;
     }).toList();
 
@@ -542,7 +557,7 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
     }
 
     // Remove successfully added transactions
-    suggestedTransactions.removeWhere((t) => validTransactions.contains(t));
+    _suggestedTransactions.removeWhere((t) => validTransactions.contains(t));
 
     if (context.mounted) {
       String message;

@@ -24,7 +24,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     emit(TransactionLoading());
     try {
       await financeService.addTransaction(event.transaction);
-      await _onFetchTransactions(FetchTransactions(), emit);
+      final transactions = await financeService.fetchTransactions();
+      emit(TransactionSuccess(transactions: transactions));
     } catch (e) {
       emit(TransactionFailure(error: e.toString()));
     }
@@ -36,8 +37,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     emit(TransactionLoading());
     try {
-      await financeService.fetchTransactions();
-      emit(TransactionSuccess(transactions: financeService.transactions));
+      final transactions = await financeService.fetchTransactions();
+      emit(TransactionSuccess(transactions: transactions));
     } catch (e) {
       emit(TransactionFailure(error: e.toString()));
     }
@@ -49,8 +50,9 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     emit(TransactionLoading());
     try {
-      await financeService.deleteTransaction(event.transactionId);
-      await _onFetchTransactions(FetchTransactions(), emit);
+      await financeService.deleteTransaction(event.id);
+      final transactions = await financeService.fetchTransactions();
+      emit(TransactionSuccess(transactions: transactions));
     } catch (e) {
       emit(TransactionFailure(error: e.toString()));
     }
@@ -62,11 +64,9 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     emit(TransactionLoading());
     try {
-      await financeService.updateTransaction(
-        event.id,
-        event.transaction,
-      );
-      await _onFetchTransactions(FetchTransactions(), emit);
+      await financeService.updateTransaction(event.id, event.transaction);
+      final transactions = await financeService.fetchTransactions();
+      emit(TransactionSuccess(transactions: transactions));
     } catch (e) {
       emit(TransactionFailure(error: e.toString()));
     }

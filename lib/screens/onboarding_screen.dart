@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/utils/currency_utils.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/auth/auth_bloc.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
@@ -27,8 +29,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController.text = widget.authService.userName.value;
-    _selectedCurrency = widget.authService.preferredCurrency.value;
+    final authState = context.read<AuthBloc>().state;
+    _nameController.text = authState.userName;
+    _selectedCurrency = authState.preferredCurrency;
   }
 
   final List<OnboardingPage> _pages = [
@@ -293,7 +296,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _onGetStarted() async {
     if (_nameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter your name')),
+        const SnackBar(content: Text('Please enter your name')),
       );
       return;
     }
@@ -301,11 +304,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasCompletedOnboarding', true);
 
-    // Update user's name and preferred currency
-    await widget.authService.updateUserProfile(
-      name: _nameController.text,
-      preferredCurrency: _selectedCurrency,
-    );
+    // Update user's name and preferred currency using AuthBloc
+    context.read<AuthBloc>().add(UpdateUserName(_nameController.text));
+    context.read<AuthBloc>().add(UpdatePreferredCurrency(_selectedCurrency));
 
     widget.onComplete();
   }

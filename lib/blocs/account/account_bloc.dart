@@ -22,8 +22,8 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   ) async {
     emit(AccountLoading());
     try {
-      await financeService.fetchAccounts();
-      emit(AccountSuccess(accounts: financeService.accounts));
+      final accounts = await financeService.fetchAccounts();
+      emit(AccountSuccess(accounts: accounts));
     } catch (e) {
       emit(AccountFailure(error: e.toString()));
     }
@@ -36,7 +36,8 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     emit(AccountLoading());
     try {
       await financeService.addAccount(event.account);
-      await _onFetchAccounts(FetchAccounts(), emit);
+      final accounts = await financeService.fetchAccounts();
+      emit(AccountSuccess(accounts: accounts));
     } catch (e) {
       emit(AccountFailure(error: e.toString()));
     }
@@ -48,10 +49,9 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   ) async {
     emit(AccountLoading());
     try {
-      await financeService.updateAccount(
-        event.account,
-      );
-      await _onFetchAccounts(FetchAccounts(), emit);
+      await financeService.updateAccount(event.account);
+      final accounts = await financeService.fetchAccounts();
+      emit(AccountSuccess(accounts: accounts));
     } catch (e) {
       emit(AccountFailure(error: e.toString()));
     }
@@ -64,7 +64,8 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     emit(AccountLoading());
     try {
       await financeService.deleteAccount(event.id);
-      await _onFetchAccounts(FetchAccounts(), emit);
+      final accounts = await financeService.fetchAccounts();
+      emit(AccountSuccess(accounts: accounts));
     } catch (e) {
       emit(AccountFailure(error: e.toString()));
     }

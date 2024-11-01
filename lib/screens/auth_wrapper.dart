@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import 'package:signals/signals_flutter.dart';
 import 'package:finapp/screens/login_screen.dart';
 import 'package:finapp/screens/main_screen.dart';
 import 'package:finapp/screens/onboarding_screen.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/auth/auth_bloc.dart';
+import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -18,60 +20,60 @@ class AuthWrapper extends StatefulWidget {
 class _AuthWrapperState extends State<AuthWrapper> {
   final AuthService _authService = GetIt.instance<AuthService>();
   final FinanceService _financeService = GetIt.instance<FinanceService>();
-  final isAuthenticated = signal(false);
-  final hasCompletedOnboarding = signal(false);
+  bool _hasCompletedOnboarding = false;
 
   @override
   void initState() {
     super.initState();
     _checkOnboardingStatus();
-    _listenToAuthChanges();
+    _initializeAuth();
   }
 
   void _checkOnboardingStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    hasCompletedOnboarding.value =
-        prefs.getBool('hasCompletedOnboarding') ?? false;
+    setState(() {
+      _hasCompletedOnboarding =
+          prefs.getBool('hasCompletedOnboarding') ?? false;
+    });
   }
 
-  void _listenToAuthChanges() {
-    isAuthenticated.value = _authService.isAuthenticated;
-    effect(() {
-      _authService.authStateChanges.listen((event) {
-        isAuthenticated.value = _authService.isAuthenticated;
-        if (isAuthenticated.value) {
-          _financeService.fetchCategories();
-          _financeService.fetchTransactions();
-        } else {
-          // remove the navigation stack
-          Navigator.popUntil(context, (route) => route.isFirst);
-        }
-      });
-    });
+  void _initializeAuth() {
+    context.read<AuthBloc>().add(InitializeAuth());
   }
 
   void _onOnboardingComplete() {
     setState(() {
-      hasCompletedOnboarding.value = true;
+      _hasCompletedOnboarding = true;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      if (isAuthenticated.value && !hasCompletedOnboarding.value) {
-        return OnboardingScreen(
-          onComplete: _onOnboardingComplete,
-          authService: _authService,
-        );
-      } else if (isAuthenticated.value) {
-        return MainScreen(
-          authService: _authService,
-          financeService: _financeService,
-        );
-      } else {
-        return LoginScreen(authService: _authService);
-      }
-    });
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state.isAuthenticated) {
+          // Fetch initial data when authenticated
+          context.read<TransactionBloc>().add(FetchTransactions());
+        } else {
+          // Clear navigation stack when logging out
+          Navigator.popUntil(context, (route) => route.isFirst);
+        }
+      },
+      builder: (context, state) {
+        if (state.isAuthenticated && !_hasCompletedOnboarding) {
+          return OnboardingScreen(
+            onComplete: _onOnboardingComplete,
+            authService: _authService,
+          );
+        } else if (state.isAuthenticated) {
+          return MainScreen(
+            authService: _authService,
+            financeService: _financeService,
+          );
+        } else {
+          return LoginScreen(authService: _authService);
+        }
+      },
+    );
   }
 }

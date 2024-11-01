@@ -125,8 +125,11 @@ class _AccountsOverviewState extends State<AccountsOverview> {
                             itemCount: accounts.length,
                             itemBuilder: (context, index) {
                               final account = accounts[index];
-                              final balance = widget.financeService
-                                  .getAccountBalance(account.id!);
+                              final balance =
+                                  widget.financeService.getAccountBalance(
+                                account.id!,
+                                transactions,
+                              );
                               final isPositive = balance['balance']! >= 0;
 
                               final total =

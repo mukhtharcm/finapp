@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:finapp/services/auth_service.dart';
-import 'package:signals/signals_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/utils/currency_utils.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/auth/auth_bloc.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   final AuthService authService;
@@ -16,7 +17,7 @@ class ProfileSettingsScreen extends StatefulWidget {
 class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  final isLoading = signal(false);
+  bool _isLoading = false;
   String? _selectedCurrency;
 
   final _availableCurrencies = [
@@ -36,9 +37,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.authService.userName.value);
-    _selectedCurrency = widget.authService.preferredCurrency.value;
+    final authState = context.read<AuthBloc>().state;
+    _nameController = TextEditingController(text: authState.userName);
+    _selectedCurrency = authState.preferredCurrency;
   }
 
   @override
@@ -49,12 +50,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
   Future<void> _saveChanges() async {
     if (_formKey.currentState!.validate()) {
-      isLoading.value = true;
+      setState(() => _isLoading = true);
       try {
-        await widget.authService.updateUserProfile(
-          name: _nameController.text,
-          preferredCurrency: _selectedCurrency,
-        );
+        context.read<AuthBloc>().add(UpdateUserName(_nameController.text));
+        context
+            .read<AuthBloc>()
+            .add(UpdatePreferredCurrency(_selectedCurrency!));
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Profile updated successfully')),
@@ -68,7 +70,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           );
         }
       } finally {
-        isLoading.value = false;
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -77,12 +79,19 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Profile Settings', style: theme.textTheme.headlineSmall),
-      ),
-      body: Watch((context) {
-        return Stack(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update profile: ${state.error}')),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Profile Settings', style: theme.textTheme.headlineSmall),
+        ),
+        body: Stack(
           children: [
             SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -169,14 +178,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: isLoading.value ? null : _saveChanges,
+                        onPressed: _isLoading ? null : _saveChanges,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: isLoading.value
+                        child: _isLoading
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,
@@ -193,8 +202,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               ),
             ),
           ],
-        );
-      }),
+        ),
+      ),
     );
   }
 }

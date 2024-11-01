@@ -19,12 +19,12 @@ class AddTransaction extends TransactionEvent {
 class FetchTransactions extends TransactionEvent {}
 
 class DeleteTransaction extends TransactionEvent {
-  final String transactionId;
+  final String id;
 
-  const DeleteTransaction(this.transactionId);
+  const DeleteTransaction(this.id);
 
   @override
-  List<Object> get props => [transactionId];
+  List<Object> get props => [id];
 }
 
 class UpdateTransaction extends TransactionEvent {

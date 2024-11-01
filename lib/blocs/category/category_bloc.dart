@@ -22,8 +22,8 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
   ) async {
     emit(CategoryLoading());
     try {
-      await financeService.fetchCategories();
-      emit(CategorySuccess(categories: financeService.categories));
+      final categories = await financeService.fetchCategories();
+      emit(CategorySuccess(categories: categories));
     } catch (e) {
       emit(CategoryFailure(error: e.toString()));
     }
@@ -36,7 +36,8 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     emit(CategoryLoading());
     try {
       await financeService.addCategory(event.category);
-      await _onFetchCategories(FetchCategories(), emit);
+      final categories = await financeService.fetchCategories();
+      emit(CategorySuccess(categories: categories));
     } catch (e) {
       emit(CategoryFailure(error: e.toString()));
     }
@@ -49,7 +50,8 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     emit(CategoryLoading());
     try {
       await financeService.updateCategory(event.category);
-      await _onFetchCategories(FetchCategories(), emit);
+      final categories = await financeService.fetchCategories();
+      emit(CategorySuccess(categories: categories));
     } catch (e) {
       emit(CategoryFailure(error: e.toString()));
     }
@@ -62,7 +64,8 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     emit(CategoryLoading());
     try {
       await financeService.deleteCategory(event.id);
-      await _onFetchCategories(FetchCategories(), emit);
+      final categories = await financeService.fetchCategories();
+      emit(CategorySuccess(categories: categories));
     } catch (e) {
       emit(CategoryFailure(error: e.toString()));
     }

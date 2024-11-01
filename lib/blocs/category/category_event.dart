@@ -21,9 +21,7 @@ class AddCategory extends CategoryEvent {
 class UpdateCategory extends CategoryEvent {
   final Category category;
 
-  const UpdateCategory({
-    required this.category,
-  });
+  const UpdateCategory({required this.category});
 
   @override
   List<Object> get props => [category];

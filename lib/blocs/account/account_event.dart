@@ -21,9 +21,7 @@ class AddAccount extends AccountEvent {
 class UpdateAccount extends AccountEvent {
   final Account account;
 
-  const UpdateAccount({
-    required this.account,
-  });
+  const UpdateAccount({required this.account});
 
   @override
   List<Object> get props => [account];

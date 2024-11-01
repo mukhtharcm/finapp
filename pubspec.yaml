@@ -14,7 +14,6 @@ dependencies:
   provider: ^6.1.2
   pocketbase: ^0.18.1
   flutter_secure_storage: ^9.0.0
-  signals: ^5.5.0
   google_fonts: ^6.2.1
   flutter_animate: ^4.5.0
   shared_preferences: ^2.3.2

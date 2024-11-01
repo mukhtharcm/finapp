@@ -7,6 +7,8 @@ abstract class AuthEvent extends Equatable {
   List<Object> get props => [];
 }
 
+class InitializeAuth extends AuthEvent {}
+
 class UpdateUserName extends AuthEvent {
   final String userName;
 
@@ -26,3 +28,26 @@ class UpdatePreferredCurrency extends AuthEvent {
 }
 
 class LogoutRequested extends AuthEvent {}
+
+class LoginRequested extends AuthEvent {
+  final String email;
+  final String password;
+
+  const LoginRequested(this.email, this.password);
+
+  @override
+  List<Object> get props => [email, password];
+}
+
+class SignUpRequested extends AuthEvent {
+  final String email;
+  final String password;
+  final String name;
+
+  const SignUpRequested(this.email, this.password, this.name);
+
+  @override
+  List<Object> get props => [email, password, name];
+}
+
+class DeleteAccountRequested extends AuthEvent {}

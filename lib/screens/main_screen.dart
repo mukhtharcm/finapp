@@ -1,3 +1,6 @@
+import 'package:finapp/blocs/account/account_bloc.dart';
+import 'package:finapp/blocs/category/category_bloc.dart';
+import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,6 +12,7 @@ import 'package:finapp/screens/voice_transaction_screen.dart';
 import 'package:finapp/screens/add_transaction_screen.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MainScreen extends StatefulWidget {
   final AuthService authService;
@@ -40,6 +44,7 @@ class _MainScreenState extends State<MainScreen> {
       TransactionsScreen(),
       InsightsScreen(
         financeService: widget.financeService,
+        authService: widget.authService,
       ),
       MoreScreen(
         authService: widget.authService,
@@ -47,10 +52,10 @@ class _MainScreenState extends State<MainScreen> {
       ),
     ];
 
-    // Fetch initial data
-    widget.financeService.fetchTransactions();
-    widget.financeService.fetchCategories();
-    widget.financeService.fetchAccounts();
+    // Use blocs instead of direct service calls
+    context.read<TransactionBloc>().add(FetchTransactions());
+    context.read<CategoryBloc>().add(FetchCategories());
+    context.read<AccountBloc>().add(FetchAccounts());
   }
 
   void _onItemTapped(int index) {

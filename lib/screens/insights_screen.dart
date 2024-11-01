@@ -1,55 +1,103 @@
+import 'package:finapp/models/category.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/utils/currency_utils.dart';
-import 'package:get_it/get_it.dart';
-import 'package:signals/signals_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/transaction/transaction_bloc.dart';
+import 'package:finapp/blocs/category/category_bloc.dart';
+import 'package:finapp/blocs/auth/auth_bloc.dart';
 
-class InsightsScreen extends StatelessWidget {
+class InsightsScreen extends StatefulWidget {
   final FinanceService financeService;
-  final AuthService authService = GetIt.instance<AuthService>();
+  final AuthService authService;
 
-  InsightsScreen({super.key, required this.financeService});
+  const InsightsScreen({
+    super.key,
+    required this.financeService,
+    required this.authService,
+  });
+
+  @override
+  State<InsightsScreen> createState() => _InsightsScreenState();
+}
+
+class _InsightsScreenState extends State<InsightsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<TransactionBloc>().add(FetchTransactions());
+    context.read<CategoryBloc>().add(FetchCategories());
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currencySymbol =
-        CurrencyUtils.getCurrencySymbol(authService.preferredCurrency.value);
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Financial Insights', style: theme.textTheme.headlineSmall),
         elevation: 0,
       ),
-      body: Watch((context) {
-        final transactions = financeService.transactions;
-        return RefreshIndicator(
-          onRefresh: () async {
-            await financeService.fetchTransactions();
-            await financeService.fetchCategories();
-          },
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            children: [
-              _buildFinancialSummary(transactions, currencySymbol, theme),
-              const SizedBox(height: 24),
-              _buildSectionTitle('Income vs Expenses', theme),
-              _buildCustomIncomeVsExpensesChart(
-                  transactions, currencySymbol, theme),
-              const SizedBox(height: 24),
-              _buildSectionTitle('Top Spending Categories', theme),
-              _buildCustomSpendingBreakdown(
-                  transactions, currencySymbol, theme),
-            ]
-                .animate(interval: 100.ms)
-                .fadeIn(duration: 300.ms)
-                .slideY(begin: 0.1, end: 0),
-          ),
-        );
-      }),
+      body: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, authState) {
+          final currencySymbol = CurrencyUtils.getCurrencySymbol(
+            authState.preferredCurrency,
+          );
+
+          return BlocBuilder<TransactionBloc, TransactionState>(
+            builder: (context, transactionState) {
+              if (transactionState is TransactionSuccess) {
+                final transactions = transactionState.transactions ?? [];
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    context.read<TransactionBloc>().add(FetchTransactions());
+                    context.read<CategoryBloc>().add(FetchCategories());
+                  },
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 24,
+                    ),
+                    children: [
+                      _buildFinancialSummary(
+                          transactions, currencySymbol, theme),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('Income vs Expenses', theme),
+                      _buildCustomIncomeVsExpensesChart(
+                        transactions,
+                        currencySymbol,
+                        theme,
+                      ),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('Top Spending Categories', theme),
+                      BlocBuilder<CategoryBloc, CategoryState>(
+                        builder: (context, categoryState) {
+                          if (categoryState is CategorySuccess) {
+                            return _buildCustomSpendingBreakdown(
+                              transactions,
+                              categoryState.categories,
+                              currencySymbol,
+                              theme,
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ]
+                        .animate(interval: 100.ms)
+                        .fadeIn(duration: 300.ms)
+                        .slideY(begin: 0.1, end: 0),
+                  ),
+                );
+              }
+              return const Center(child: CircularProgressIndicator());
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -181,12 +229,19 @@ class InsightsScreen extends StatelessWidget {
   }
 
   Widget _buildCustomSpendingBreakdown(
-      List<Transaction> transactions, String currencySymbol, ThemeData theme) {
+    List<Transaction> transactions,
+    List<Category> categories,
+    String currencySymbol,
+    ThemeData theme,
+  ) {
     final expensesByCategory = <String, double>{};
     for (var transaction
         in transactions.where((t) => t.type == TransactionType.expense)) {
-      final category = financeService.categories
-          .firstWhere((c) => c.id == transaction.categoryId)
+      final category = categories
+          .firstWhere(
+            (c) => c.id == transaction.categoryId,
+            orElse: () => Category(name: 'Unknown', icon: '❓'),
+          )
           .name;
       expensesByCategory[category] =
           (expensesByCategory[category] ?? 0) + transaction.amount;

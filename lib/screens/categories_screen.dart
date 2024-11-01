@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/models/category.dart';
-import 'package:signals/signals_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/category/category_bloc.dart';
 
 class CategoriesScreen extends StatelessWidget {
   final FinanceService financeService;
@@ -16,34 +17,58 @@ class CategoriesScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Categories', style: theme.textTheme.headlineSmall),
       ),
-      body: Watch((context) {
-        final categories = financeService.categories;
-        return ListView.builder(
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final category = categories[index];
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: theme.colorScheme.secondaryContainer,
-                  child: Text(
-                    category.icon,
-                    style: TextStyle(
-                        fontSize: 24, color: theme.colorScheme.secondary),
+      body: BlocBuilder<CategoryBloc, CategoryState>(
+        builder: (context, state) {
+          if (state is CategoryLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is CategoryFailure) {
+            return Center(child: Text('Error: ${state.error}'));
+          }
+
+          if (state is CategorySuccess) {
+            final categories = state.categories;
+            return ListView.builder(
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                return Card(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: theme.colorScheme.secondaryContainer,
+                      child: Text(
+                        category.icon,
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: theme.colorScheme.secondary,
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      category.name,
+                      style: theme.textTheme.titleMedium,
+                    ),
                   ),
-                ),
-                title: Text(category.name, style: theme.textTheme.titleMedium),
-              ),
-            ).animate().fadeIn(duration: 300.ms, delay: (50 * index).ms).slideX(
-                begin: 0.2,
-                end: 0,
-                duration: 300.ms,
-                delay: (50 * index).ms,
-                curve: Curves.easeOutCubic);
-          },
-        );
-      }),
+                )
+                    .animate()
+                    .fadeIn(duration: 300.ms, delay: (50 * index).ms)
+                    .slideX(
+                      begin: 0.2,
+                      end: 0,
+                      duration: 300.ms,
+                      delay: (50 * index).ms,
+                      curve: Curves.easeOutCubic,
+                    );
+              },
+            );
+          }
+
+          return const SizedBox.shrink();
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCategoryDialog(context),
         child: const Icon(Icons.add_rounded),
@@ -87,7 +112,7 @@ class CategoriesScreen extends StatelessWidget {
                   icon: iconController.text,
                   userId: financeService.getCurrentUserId(),
                 );
-                financeService.addCategory(newCategory);
+                context.read<CategoryBloc>().add(AddCategory(newCategory));
                 Navigator.pop(context);
               }
             },

@@ -7,7 +7,8 @@ import 'package:finapp/screens/settings_screen.dart';
 import 'package:finapp/screens/profile_settings_screen.dart';
 import 'package:finapp/screens/about_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:signals/signals_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finapp/blocs/auth/auth_bloc.dart';
 
 class MoreScreen extends StatelessWidget {
   final AuthService authService;
@@ -65,52 +66,56 @@ class MoreScreen extends StatelessWidget {
   }
 
   Widget _buildUserSection(BuildContext context, ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 30,
-            backgroundColor: theme.colorScheme.primary,
-            child: Watch((context) => Text(
-                  authService.userName.value[0].toUpperCase(),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: theme.colorScheme.primary,
+                child: Text(
+                  state.userName[0].toUpperCase(),
                   style: theme.textTheme.headlineMedium?.copyWith(
                     color: theme.colorScheme.onPrimary,
                   ),
-                )),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Watch((context) => Text(
-                      authService.userName.value,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      state.userName,
                       style: theme.textTheme.titleLarge,
-                    )),
-                const SizedBox(height: 4),
-                Watch((context) => Text(
-                      'Currency: ${authService.preferredCurrency.value}',
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Currency: ${state.preferredCurrency}',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
-                    )),
-              ],
-            ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () => _navigateTo(
+                  context,
+                  ProfileSettingsScreen(authService: authService),
+                ),
+                icon: const Icon(Icons.edit_outlined),
+              ),
+            ],
           ),
-          IconButton(
-            onPressed: () => _navigateTo(
-              context,
-              ProfileSettingsScreen(authService: authService),
-            ),
-            icon: const Icon(Icons.edit_outlined),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -152,9 +157,7 @@ class MoreScreen extends StatelessWidget {
               subtitle: 'App preferences and theme',
               onTap: () => _navigateTo(
                 context,
-                SettingsScreen(
-                    // authService: authService,
-                    ),
+                SettingsScreen(),
               ),
             ),
             _MenuItem(
@@ -271,7 +274,7 @@ class MoreScreen extends StatelessWidget {
     );
 
     if (confirmed == true) {
-      await authService.logout();
+      context.read<AuthBloc>().add(LogoutRequested());
     }
   }
 }

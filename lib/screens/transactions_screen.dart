@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/models/category.dart';
 import 'package:finapp/screens/add_transaction_screen.dart';
-import 'package:finapp/widgets/transaction_detail_dialog.dart';
 import 'package:finapp/utils/currency_utils.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
