@@ -7,6 +7,7 @@ import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/widgets/balance_card.dart';
 import 'package:finapp/widgets/recent_transactions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:finapp/widgets/accounts_overview.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -93,6 +94,14 @@ class DashboardScreen extends StatelessWidget {
                             curve: Curves.easeOutCubic,
                           );
                     },
+                  );
+                } else if (transactionState is TransactionLoading) {
+                  return Skeletonizer(
+                    enabled: true,
+                    child: BalanceCard(
+                      balance: 0,
+                      currency: 'USD',
+                    ),
                   );
                 }
                 return const SizedBox.shrink();
