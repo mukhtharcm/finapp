@@ -9,6 +9,8 @@ import 'package:finapp/blocs/category/category_bloc.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
 import 'package:finapp/blocs/account/account_bloc.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:finapp/utils/error_utils.dart';
+import 'package:finapp/widgets/error_widgets.dart';
 
 class RecentTransactions extends StatelessWidget {
   const RecentTransactions({super.key});
@@ -41,13 +43,13 @@ class RecentTransactions extends StatelessWidget {
                     child: ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: 5, // Show 5 skeleton items while loading
+                      itemCount: 5,
                       itemBuilder: (context, index) {
                         return ListTile(
-                          leading: CircleAvatar(child: Text('💰')),
-                          title: Text('Transaction Description'),
-                          subtitle: Text('Category'),
-                          trailing: Text('\$123.45'),
+                          leading: const CircleAvatar(child: Text('💰')),
+                          title: const Text('Transaction Description'),
+                          subtitle: const Text('Category'),
+                          trailing: const Text('\$123.45'),
                         );
                       },
                     ),
@@ -55,17 +57,43 @@ class RecentTransactions extends StatelessWidget {
                 }
 
                 if (transactionState is TransactionFailure) {
-                  return Center(
-                      child: Text('Error: ${transactionState.error}'));
+                  return InlineErrorWidget(
+                    message: ErrorUtils.getErrorMessage(transactionState.error),
+                    onRetry: () {
+                      context.read<TransactionBloc>().add(FetchTransactions());
+                    },
+                  );
                 }
 
                 if (transactionState is TransactionSuccess &&
                     transactionState.transactions != null) {
                   return BlocBuilder<CategoryBloc, CategoryState>(
                     builder: (context, categoryState) {
+                      if (categoryState is CategoryFailure) {
+                        return InlineErrorWidget(
+                          message:
+                              ErrorUtils.getErrorMessage(categoryState.error),
+                          onRetry: () {
+                            context.read<CategoryBloc>().add(FetchCategories());
+                          },
+                        );
+                      }
+
                       if (categoryState is CategorySuccess) {
                         return BlocBuilder<AccountBloc, AccountState>(
                           builder: (context, accountState) {
+                            if (accountState is AccountFailure) {
+                              return InlineErrorWidget(
+                                message: ErrorUtils.getErrorMessage(
+                                    accountState.error),
+                                onRetry: () {
+                                  context
+                                      .read<AccountBloc>()
+                                      .add(FetchAccounts());
+                                },
+                              );
+                            }
+
                             if (accountState is AccountSuccess) {
                               final transactions =
                                   transactionState.transactions!;
@@ -73,8 +101,24 @@ class RecentTransactions extends StatelessWidget {
                               final accounts = accountState.accounts;
 
                               if (transactions.isEmpty) {
-                                return const Center(
-                                  child: Text('No transactions yet'),
+                                return Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(24.0),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.receipt_long_outlined,
+                                          size: 48,
+                                          color: theme.colorScheme.outline,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        const Text(
+                                          'No transactions yet',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 );
                               }
 
@@ -105,11 +149,12 @@ class RecentTransactions extends StatelessWidget {
                                 },
                               );
                             }
-                            return const CircularProgressIndicator();
+                            return const Center(
+                                child: CircularProgressIndicator());
                           },
                         );
                       }
-                      return const SizedBox.shrink();
+                      return const Center(child: CircularProgressIndicator());
                     },
                   );
                 }

@@ -12,6 +12,8 @@ import 'package:finapp/blocs/category/category_bloc.dart';
 import 'package:finapp/blocs/account/account_bloc.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:finapp/utils/error_utils.dart';
+import 'package:finapp/widgets/error_widgets.dart';
 
 class TransactionsScreen extends StatelessWidget {
   const TransactionsScreen({super.key});
@@ -96,7 +98,12 @@ class TransactionsScreen extends StatelessWidget {
             }
 
             if (transactionState is TransactionFailure) {
-              return Center(child: Text('Error: ${transactionState.error}'));
+              return ErrorView(
+                message: ErrorUtils.getErrorMessage(transactionState.error),
+                onRetry: () {
+                  context.read<TransactionBloc>().add(FetchTransactions());
+                },
+              );
             }
 
             if (transactionState is TransactionSuccess &&

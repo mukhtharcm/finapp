@@ -11,6 +11,8 @@ import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:finapp/widgets/account_card.dart';
+import 'package:finapp/utils/error_utils.dart';
+import 'package:finapp/widgets/error_widgets.dart';
 
 class AccountsOverview extends StatelessWidget {
   final AuthService authService;
@@ -52,7 +54,12 @@ class AccountsOverview extends StatelessWidget {
             }
 
             if (accountState is AccountFailure) {
-              return Center(child: Text('Error: ${accountState.error}'));
+              return InlineErrorWidget(
+                message: ErrorUtils.getErrorMessage(accountState.error),
+                onRetry: () {
+                  context.read<AccountBloc>().add(FetchAccounts());
+                },
+              );
             }
 
             if (accountState is AccountSuccess) {
