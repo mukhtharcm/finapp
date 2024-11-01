@@ -8,6 +8,7 @@ import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/blocs/category/category_bloc.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
 import 'package:finapp/blocs/account/account_bloc.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class RecentTransactions extends StatefulWidget {
   const RecentTransactions({
@@ -50,7 +51,22 @@ class _RecentTransactionsState extends State<RecentTransactions> {
             return BlocBuilder<TransactionBloc, TransactionState>(
               builder: (context, transactionState) {
                 if (transactionState is TransactionLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Skeletonizer(
+                    enabled: true,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: 5, // Show 5 skeleton items while loading
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          leading: CircleAvatar(child: Text('💰')),
+                          title: Text('Transaction Description'),
+                          subtitle: Text('Category'),
+                          trailing: Text('\$123.45'),
+                        );
+                      },
+                    ),
+                  );
                 }
 
                 if (transactionState is TransactionFailure) {

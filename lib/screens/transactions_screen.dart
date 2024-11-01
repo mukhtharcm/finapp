@@ -11,6 +11,7 @@ import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/blocs/category/category_bloc.dart';
 import 'package:finapp/blocs/account/account_bloc.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -83,7 +84,28 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         return BlocBuilder<TransactionBloc, TransactionState>(
           builder: (context, transactionState) {
             if (transactionState is TransactionLoading) {
-              return const Center(child: CircularProgressIndicator());
+              // return const Center(child: CircularProgressIndicator());
+              return Skeletonizer(
+                enabled: true,
+                child: ListView.builder(
+                  itemCount: 5,
+                  itemBuilder: (context, index) => TransactionCard(
+                    transaction: Transaction(
+                      userId: '',
+                      type: type,
+                      amount: 0,
+                      description: '',
+                      timestamp: DateTime.now(),
+                      categoryId: '',
+                      accountId: '',
+                      created: DateTime.now(),
+                    ),
+                    category: Category.empty(),
+                    account: Account.empty(),
+                    currencySymbol: currencySymbol,
+                  ),
+                ),
+              );
             }
 
             if (transactionState is TransactionFailure) {
