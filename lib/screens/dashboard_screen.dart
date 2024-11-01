@@ -104,7 +104,10 @@ class DashboardScreen extends StatelessWidget {
                 financeService.categories.length;
                 return Column(
                   children: [
-                    AccountsOverview()
+                    AccountsOverview(
+                      authService: authService,
+                      financeService: financeService,
+                    )
                         .animate()
                         .fadeIn(delay: 200.ms, duration: 400.ms)
                         .slideY(begin: 0.05, end: 0, duration: 400.ms),

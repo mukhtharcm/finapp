@@ -8,14 +8,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finapp/blocs/account/account_bloc.dart';
 import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
-import 'package:get_it/get_it.dart';
 
 class AccountsOverview extends StatefulWidget {
-  final AuthService authService = GetIt.instance<AuthService>();
-  final FinanceService financeService = GetIt.instance<FinanceService>();
+  final AuthService authService;
+  final FinanceService financeService;
 
-  AccountsOverview({
+  const AccountsOverview({
     super.key,
+    required this.authService,
+    required this.financeService,
   });
 
   @override
