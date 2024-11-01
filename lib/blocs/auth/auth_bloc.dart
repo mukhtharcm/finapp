@@ -90,11 +90,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LoginRequested event,
     Emitter<AuthState> emit,
   ) async {
+    emit(state.copyWith(isLoading: true, error: null));
     try {
       await authService.signIn(event.email, event.password);
-      add(InitializeAuth());
+      emit(state.copyWith(
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      ));
     } catch (e) {
-      emit(state.copyWith(error: e.toString()));
+      emit(state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      ));
     }
   }
 
