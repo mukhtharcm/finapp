@@ -22,187 +22,254 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Settings', style: theme.textTheme.headlineSmall),
       ),
-      body: ListView(
-        children: [
-          _buildSection(
-            theme,
-            'Appearance',
-            [
-              BlocBuilder<ThemeBloc, ThemeState>(
-                builder: (context, state) {
-                  return ListTile(
-                    title: const Text('Theme'),
-                    leading: const Icon(Icons.palette_outlined),
-                    trailing: DropdownButton<String>(
-                      value: state.currentTheme,
-                      underline: const SizedBox(),
-                      items: themeService.availableThemes
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          context.read<ThemeBloc>().add(ChangeTheme(newValue));
-                        }
-                      },
-                    ),
-                  )
-                      .animate()
-                      .fadeIn(duration: 300.ms)
-                      .slideX(begin: 0.2, end: 0);
-                },
-              ),
-              BlocBuilder<ThemeBloc, ThemeState>(
-                builder: (context, state) {
-                  return ListTile(
-                    title: const Text('Theme Mode'),
-                    leading: const Icon(Icons.brightness_6_outlined),
-                    trailing: DropdownButton<ThemeMode>(
-                      value: state.themeMode,
-                      underline: const SizedBox(),
-                      items: ThemeMode.values
-                          .map<DropdownMenuItem<ThemeMode>>((ThemeMode mode) {
-                        return DropdownMenuItem<ThemeMode>(
-                          value: mode,
-                          child: Text(themeService.getThemeModeString(mode)),
-                        );
-                      }).toList(),
-                      onChanged: (ThemeMode? newMode) {
-                        if (newMode != null) {
-                          context
-                              .read<ThemeBloc>()
-                              .add(ChangeThemeMode(newMode));
-                        }
-                      },
-                    ),
-                  )
-                      .animate()
-                      .fadeIn(delay: 100.ms, duration: 300.ms)
-                      .slideX(begin: 0.2, end: 0);
-                },
-              ),
-            ],
-          ),
-          _buildSection(
-            theme,
-            'Account',
-            [
-              BlocBuilder<AuthBloc, AuthState>(
-                builder: (context, state) {
-                  return ListTile(
-                    title: const Text('Profile'),
-                    subtitle: Text(state.userName),
-                    leading: const Icon(Icons.person_outline),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProfileSettingsScreen(
-                            authService: authService,
-                          ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Profile Card
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                return Card(
+                  margin: const EdgeInsets.all(16),
+                  child: InkWell(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileSettingsScreen(
+                          authService: authService,
                         ),
-                      );
-                    },
-                  )
-                      .animate()
-                      .fadeIn(delay: 200.ms, duration: 300.ms)
-                      .slideX(begin: 0.2, end: 0);
-                },
-              ),
-            ],
-          ),
-          _buildSection(
-            theme,
-            'General',
-            [
-              ListTile(
-                title: const Text('About'),
-                subtitle: const Text('App information & legal'),
-                leading: const Icon(Icons.info_outline),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.push(
+                      ),
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundColor: theme.colorScheme.primaryContainer,
+                            child: Text(
+                              state.userName[0].toUpperCase(),
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  state.userName,
+                                  style: theme.textTheme.titleLarge,
+                                ),
+                                Text(
+                                  'Tap to edit profile',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ).animate().fadeIn(duration: 200.ms).scale(
+                      begin: const Offset(0.95, 0.95),
+                      end: const Offset(1, 1),
+                    );
+              },
+            ),
+
+            // Settings Groups
+            _buildSettingsGroup(
+              theme,
+              'Appearance',
+              [
+                // Theme Selector
+                BlocBuilder<ThemeBloc, ThemeState>(
+                  builder: (context, state) {
+                    return _buildSettingTile(
+                      theme,
+                      title: 'Theme',
+                      icon: Icons.palette_outlined,
+                      trailing: DropdownButton<String>(
+                        value: state.currentTheme,
+                        underline: const SizedBox(),
+                        items: themeService.availableThemes
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            context
+                                .read<ThemeBloc>()
+                                .add(ChangeTheme(newValue));
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+
+                // Theme Mode Selector
+                BlocBuilder<ThemeBloc, ThemeState>(
+                  builder: (context, state) {
+                    return _buildSettingTile(
+                      theme,
+                      title: 'Dark Mode',
+                      icon: Icons.dark_mode_outlined,
+                      trailing: Switch(
+                        value: state.themeMode == ThemeMode.dark,
+                        onChanged: (bool value) {
+                          context.read<ThemeBloc>().add(
+                                ChangeThemeMode(
+                                  value ? ThemeMode.dark : ThemeMode.light,
+                                ),
+                              );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+
+            _buildSettingsGroup(
+              theme,
+              'General',
+              [
+                _buildSettingTile(
+                  theme,
+                  title: 'About',
+                  subtitle: 'App information & legal',
+                  icon: Icons.info_outline,
+                  onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const AboutScreen(),
-                    ),
-                  );
-                },
-              )
-                  .animate()
-                  .fadeIn(delay: 300.ms, duration: 300.ms)
-                  .slideX(begin: 0.2, end: 0),
-            ],
-          ),
-          _buildSection(
-            theme,
-            'Danger Zone',
-            [
-              ListTile(
-                title: Text(
-                  'Sign Out',
-                  style: TextStyle(color: theme.colorScheme.error),
+                        builder: (context) => const AboutScreen()),
+                  ),
                 ),
-                subtitle: const Text('Log out of your account'),
-                leading: Icon(
-                  Icons.logout,
-                  color: theme.colorScheme.error,
-                ),
-                onTap: () async {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Sign Out'),
-                      content: const Text('Are you sure you want to sign out?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Sign Out'),
-                        ),
-                      ],
-                    ),
-                  );
+              ],
+            ),
 
-                  if (confirmed == true && context.mounted) {
-                    context.read<AuthBloc>().add(LogoutRequested());
-                  }
-                },
-              )
-                  .animate()
-                  .fadeIn(delay: 400.ms, duration: 300.ms)
-                  .slideX(begin: 0.2, end: 0),
-            ],
-          ),
-        ],
+            _buildSettingsGroup(
+              theme,
+              'Account',
+              [
+                _buildSettingTile(
+                  theme,
+                  title: 'Sign Out',
+                  icon: Icons.logout,
+                  iconColor: theme.colorScheme.error,
+                  textColor: theme.colorScheme.error,
+                  onTap: () => _showSignOutDialog(context),
+                ),
+              ],
+            ),
+
+            // Version info at bottom
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Version 1.0.0',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSection(ThemeData theme, String title, List<Widget> children) {
+  Widget _buildSettingsGroup(
+    ThemeData theme,
+    String title,
+    List<Widget> children,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
           child: Text(
             title,
-            style: theme.textTheme.titleMedium?.copyWith(
+            style: theme.textTheme.titleSmall?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        ...children,
-        const Divider(),
+        Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(children: children),
+        ),
       ],
+    ).animate().fadeIn(duration: 200.ms).slideX(
+          begin: 0.05,
+          end: 0,
+          curve: Curves.easeOut,
+        );
+  }
+
+  Widget _buildSettingTile(
+    ThemeData theme, {
+    required String title,
+    String? subtitle,
+    required IconData icon,
+    Color? iconColor,
+    Color? textColor,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
+    return ListTile(
+      title: Text(
+        title,
+        style: theme.textTheme.titleMedium?.copyWith(color: textColor),
+      ),
+      subtitle: subtitle != null ? Text(subtitle) : null,
+      leading: Icon(icon, color: iconColor ?? theme.colorScheme.primary),
+      trailing:
+          trailing ?? (onTap != null ? const Icon(Icons.chevron_right) : null),
+      onTap: onTap,
     );
+  }
+
+  Future<void> _showSignOutDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              'Sign Out',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      context.read<AuthBloc>().add(LogoutRequested());
+    }
   }
 }

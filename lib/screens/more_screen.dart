@@ -4,8 +4,6 @@ import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/screens/categories_screen.dart';
 import 'package:finapp/screens/settings_screen.dart';
-import 'package:finapp/screens/profile_settings_screen.dart';
-import 'package:finapp/screens/about_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
@@ -25,225 +23,229 @@ class MoreScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar.large(
-            title: Text('More', style: theme.textTheme.headlineMedium),
-            expandedHeight: 160,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      theme.colorScheme.primary.withOpacity(0.1),
-                      theme.colorScheme.surface,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  _buildUserSection(context, theme)
-                      .animate()
-                      .fadeIn(duration: 300.ms),
-                  const SizedBox(height: 24),
-                  _buildMenuSection(context, theme),
-                ],
-              ),
-            ),
+      appBar: AppBar(
+        title: Text('More', style: theme.textTheme.headlineSmall),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => _navigateTo(context, SettingsScreen()),
           ),
         ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Quick Actions Section
+            _buildSection(
+              theme,
+              'Quick Actions',
+              [
+                _buildQuickAction(
+                  context,
+                  icon: Icons.category_outlined,
+                  label: 'Categories',
+                  color: theme.colorScheme.primary,
+                  onTap: () => _navigateTo(context, const CategoriesScreen()),
+                ),
+                _buildQuickAction(
+                  context,
+                  icon: Icons.account_balance_outlined,
+                  label: 'Accounts',
+                  color: theme.colorScheme.secondary,
+                  onTap: () => _navigateTo(context, const AccountsScreen()),
+                ),
+                _buildQuickAction(
+                  context,
+                  icon: Icons.settings_outlined,
+                  label: 'Settings',
+                  color: theme.colorScheme.tertiary,
+                  onTap: () => _navigateTo(context, SettingsScreen()),
+                ),
+              ],
+            ),
+
+            // Stats Section (Placeholder for future feature)
+            _buildSection(
+              theme,
+              'Your Stats',
+              [
+                _buildStatCard(
+                  context,
+                  'Total Transactions',
+                  '0',
+                  Icons.receipt_long_outlined,
+                  theme.colorScheme.primary,
+                ),
+                _buildStatCard(
+                  context,
+                  'Active Accounts',
+                  '0',
+                  Icons.account_balance_outlined,
+                  theme.colorScheme.secondary,
+                ),
+              ],
+            ),
+
+            // Help & Support Section
+            _buildSection(
+              theme,
+              'Help & Support',
+              [
+                _buildSupportTile(
+                  context,
+                  icon: Icons.help_outline,
+                  title: 'Help Center',
+                  subtitle: 'Get help with the app',
+                  onTap: () {
+                    // TODO: Implement Help Center
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Coming soon!')),
+                    );
+                  },
+                ),
+                _buildSupportTile(
+                  context,
+                  icon: Icons.bug_report_outlined,
+                  title: 'Report an Issue',
+                  subtitle: 'Help us improve the app',
+                  onTap: () {
+                    // TODO: Implement Issue Reporting
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Coming soon!')),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildUserSection(BuildContext context, ThemeData theme) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: theme.colorScheme.primary,
-                child: Text(
-                  state.userName[0].toUpperCase(),
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: theme.colorScheme.onPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      state.userName,
-                      style: theme.textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Currency: ${state.preferredCurrency}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: () => _navigateTo(
-                  context,
-                  ProfileSettingsScreen(authService: authService),
-                ),
-                icon: const Icon(Icons.edit_outlined),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildMenuSection(BuildContext context, ThemeData theme) {
-    return Column(
-      children: [
-        _buildMenuGroup(
-          theme,
-          'Management',
-          [
-            _MenuItem(
-              icon: Icons.category_outlined,
-              title: 'Categories',
-              subtitle: 'Manage transaction categories',
-              onTap: () => _navigateTo(
-                context,
-                CategoriesScreen(),
-              ),
-            ),
-            _MenuItem(
-              icon: Icons.account_balance_outlined,
-              title: 'Accounts',
-              subtitle: 'Manage your financial accounts',
-              onTap: () => _navigateTo(
-                context,
-                AccountsScreen(),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        _buildMenuGroup(
-          theme,
-          'Preferences',
-          [
-            _MenuItem(
-              icon: Icons.settings_outlined,
-              title: 'Settings',
-              subtitle: 'App preferences and theme',
-              onTap: () => _navigateTo(
-                context,
-                SettingsScreen(),
-              ),
-            ),
-            _MenuItem(
-              icon: Icons.info_outline,
-              title: 'About',
-              subtitle: 'App information & legal',
-              onTap: () => _navigateTo(context, const AboutScreen()),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        _buildMenuGroup(
-          theme,
-          'Account',
-          [
-            _MenuItem(
-              icon: Icons.logout,
-              title: 'Sign Out',
-              subtitle: 'Log out of your account',
-              isDestructive: true,
-              onTap: () => _showSignOutDialog(context),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMenuGroup(
-      ThemeData theme, String title, List<_MenuItem> menuItems) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16, bottom: 8),
-          child: Text(
+  Widget _buildSection(ThemeData theme, String title, List<Widget> children) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
             title,
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildQuickAction(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 0,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const Spacer(),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
         ),
-        Card(
-          elevation: 0,
-          color: theme.colorScheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Card(
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color),
             ),
-          ),
-          child: Column(
-            children: menuItems.map((item) {
-              final index = menuItems.indexOf(item);
-              return Column(
-                children: [
-                  if (index > 0)
-                    Divider(
-                      height: 1,
-                      indent: 56,
-                      endIndent: 16,
-                    ),
-                  ListTile(
-                    leading: Icon(
-                      item.icon,
-                      color: item.isDestructive
-                          ? theme.colorScheme.error
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                    title: Text(
-                      item.title,
-                      style: item.isDestructive
-                          ? TextStyle(color: theme.colorScheme.error)
-                          : null,
-                    ),
-                    subtitle: Text(item.subtitle),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: item.onTap,
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
-      ],
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSupportTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 0,
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
     );
   }
 
@@ -253,44 +255,4 @@ class MoreScreen extends StatelessWidget {
       MaterialPageRoute(builder: (context) => screen),
     );
   }
-
-  Future<void> _showSignOutDialog(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Sign Out'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      context.read<AuthBloc>().add(LogoutRequested());
-    }
-  }
-}
-
-class _MenuItem {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  final bool isDestructive;
-
-  const _MenuItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.isDestructive = false,
-  });
 }
