@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:finapp/gen/assets.gen.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -13,77 +15,97 @@ class AboutScreen extends StatelessWidget {
         title: Text('About', style: theme.textTheme.headlineSmall),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         children: [
-          const CircleAvatar(
-            radius: 50,
-            child: Icon(Icons.account_balance_wallet, size: 50),
-          ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack),
-          const SizedBox(height: 16),
-          Text(
-            'FinApp',
-            style: theme.textTheme.headlineMedium,
-            textAlign: TextAlign.center,
-          ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
-          Text(
-            'Version 1.0.0',
-            style: theme.textTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
-          const SizedBox(height: 32),
+          Center(
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: theme.colorScheme.primaryContainer,
+              ),
+              child: ClipOval(
+                child: Assets.icon.icon.image(
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack),
+          ),
+          const SizedBox(height: 24),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              final version = snapshot.data?.version ?? '';
+              final buildNumber = snapshot.data?.buildNumber ?? '';
+
+              return Column(
+                children: [
+                  Text(
+                    'FinApp',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  if (version.isNotEmpty)
+                    Text(
+                      'Version $version ($buildNumber)',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ).animate().fadeIn(delay: 200.ms, duration: 300.ms);
+            },
+          ),
+          const SizedBox(height: 48),
+          _buildSection(
+            theme,
+            'About FinApp',
+            'A simple and intuitive app to help you manage your personal finances.',
+          ),
           _buildSection(
             theme,
             'Features',
-            [
-              'Track Income & Expenses',
-              'Multiple Currency Support',
-              'Voice Input Support',
-              'Category Management',
-              'Telegram Bot Integration',
-            ],
-          ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
-          const SizedBox(height: 16),
+            '• Track income and expenses\n'
+                '• Manage multiple accounts\n'
+                '• Categorize transactions\n'
+                '• View financial insights\n'
+                '• Dark mode support',
+          ),
           _buildSection(
             theme,
-            'Support',
-            [
-              'Email: support@finapp.com',
-              'Website: finapp.com',
-              'Twitter: @finapp',
-            ],
-          ).animate().fadeIn(delay: 400.ms, duration: 300.ms),
-          const SizedBox(height: 16),
-          _buildSection(
-            theme,
-            'Legal',
-            [
-              'Privacy Policy',
-              'Terms of Service',
-              'Licenses',
-            ],
-          ).animate().fadeIn(delay: 500.ms, duration: 300.ms),
+            'Credits',
+            'Made with ❤️ using Flutter',
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSection(ThemeData theme, String title, List<String> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: theme.colorScheme.primary,
-            fontWeight: FontWeight.bold,
+  Widget _buildSection(ThemeData theme, String title, String content) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        ...items.map((item) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Text(item, style: theme.textTheme.bodyMedium),
-            )),
-      ],
-    );
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 300.ms, duration: 300.ms);
   }
 }
