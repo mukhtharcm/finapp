@@ -132,7 +132,7 @@ class MoreScreen extends StatelessWidget {
               subtitle: 'Manage transaction categories',
               onTap: () => _navigateTo(
                 context,
-                CategoriesScreen(financeService: financeService),
+                CategoriesScreen(),
               ),
             ),
             _MenuItem(

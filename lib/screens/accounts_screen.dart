@@ -5,21 +5,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finapp/blocs/account/account_bloc.dart';
 import 'package:finapp/blocs/transaction/transaction_bloc.dart';
+import 'package:finapp/utils/error_utils.dart';
+import 'package:finapp/widgets/error_widgets.dart';
 
-class AccountsScreen extends StatefulWidget {
+class AccountsScreen extends StatelessWidget {
   const AccountsScreen({super.key});
-
-  @override
-  State<AccountsScreen> createState() => _AccountsScreenState();
-}
-
-class _AccountsScreenState extends State<AccountsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<AccountBloc>().add(FetchAccounts());
-    context.read<TransactionBloc>().add(FetchTransactions());
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,101 +25,150 @@ class _AccountsScreenState extends State<AccountsScreen> {
           }
 
           if (state is AccountFailure) {
-            return Center(child: Text('Error: ${state.error}'));
+            return ErrorView(
+              message: ErrorUtils.getErrorMessage(state.error),
+              onRetry: () {
+                context.read<AccountBloc>().add(FetchAccounts());
+              },
+            );
           }
 
           if (state is AccountSuccess) {
             final accounts = state.accounts;
+            if (accounts.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.account_balance_outlined,
+                      size: 64,
+                      color: theme.colorScheme.outline,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No accounts yet',
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add your first account to start tracking your finances',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ).animate().fadeIn(duration: 300.ms),
+              );
+            }
+
             return BlocBuilder<TransactionBloc, TransactionState>(
               builder: (context, transactionState) {
-                if (transactionState is TransactionSuccess) {
-                  return ListView.builder(
-                    itemCount: accounts.length,
-                    itemBuilder: (context, index) {
-                      final account = accounts[index];
-                      final balance = _getAccountBalance(
-                        account.id!,
-                        transactionState.transactions ?? [],
-                      );
+                if (transactionState is TransactionFailure) {
+                  return ErrorView(
+                    message: ErrorUtils.getErrorMessage(transactionState.error),
+                    onRetry: () {
+                      context.read<TransactionBloc>().add(FetchTransactions());
+                    },
+                  );
+                }
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor:
-                                theme.colorScheme.secondaryContainer,
-                            child: Text(
-                              account.icon,
-                              style: TextStyle(
-                                fontSize: 24,
-                                color: theme.colorScheme.secondary,
+                if (transactionState is TransactionSuccess) {
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      context.read<AccountBloc>().add(FetchAccounts());
+                      context.read<TransactionBloc>().add(FetchTransactions());
+                    },
+                    child: ListView.builder(
+                      itemCount: accounts.length,
+                      itemBuilder: (context, index) {
+                        final account = accounts[index];
+                        final balance = _getAccountBalance(
+                          account.id!,
+                          transactionState.transactions ?? [],
+                        );
+
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor:
+                                  theme.colorScheme.secondaryContainer,
+                              child: Text(
+                                account.icon,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: theme.colorScheme.secondary,
+                                ),
                               ),
                             ),
-                          ),
-                          title: Row(
-                            children: [
-                              Text(account.name,
-                                  style: theme.textTheme.titleMedium),
-                              if (account.isDefault)
-                                Container(
-                                  margin: const EdgeInsets.only(left: 8),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primaryContainer,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    'Default',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color:
-                                          theme.colorScheme.onPrimaryContainer,
+                            title: Row(
+                              children: [
+                                Text(account.name,
+                                    style: theme.textTheme.titleMedium),
+                                if (account.isDefault)
+                                  Container(
+                                    margin: const EdgeInsets.only(left: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primaryContainer,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      'Default',
+                                      style:
+                                          theme.textTheme.labelSmall?.copyWith(
+                                        color: theme
+                                            .colorScheme.onPrimaryContainer,
+                                      ),
                                     ),
                                   ),
+                              ],
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(account.type),
+                                Text(
+                                  'Balance: \$${balance['balance']?.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    color: (balance['balance'] ?? 0) >= 0
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.error,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                            ],
+                              ],
+                            ),
+                            isThreeLine: true,
+                            trailing: IconButton(
+                              icon: const Icon(Icons.more_vert),
+                              onPressed: () =>
+                                  _showAccountOptions(context, account, theme),
+                            ),
                           ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(account.type),
-                              Text(
-                                'Balance: \$${balance['balance']?.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  color: (balance['balance'] ?? 0) >= 0
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.error,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          isThreeLine: true,
-                          trailing: IconButton(
-                            icon: const Icon(Icons.more_vert),
-                            onPressed: () =>
-                                _showAccountOptions(context, account, theme),
-                          ),
-                        ),
-                      )
-                          .animate()
-                          .fadeIn(
-                            duration: 300.ms,
-                            delay: (50 * index).ms,
-                          )
-                          .slideX(
-                            begin: 0.2,
-                            end: 0,
-                            duration: 300.ms,
-                            delay: (50 * index).ms,
-                            curve: Curves.easeOutCubic,
-                          );
-                    },
+                        )
+                            .animate()
+                            .fadeIn(
+                              duration: 300.ms,
+                              delay: (50 * index).ms,
+                            )
+                            .slideX(
+                              begin: 0.2,
+                              end: 0,
+                              duration: 300.ms,
+                              delay: (50 * index).ms,
+                              curve: Curves.easeOutCubic,
+                            );
+                      },
+                    ),
                   );
                 }
                 return const Center(child: CircularProgressIndicator());
@@ -216,11 +255,11 @@ class _AccountsScreenState extends State<AccountsScreen> {
   }
 
   void _showAddAccountDialog(BuildContext context) {
-    // Existing dialog implementation
+    // Implement add account dialog
   }
 
   void _showEditAccountDialog(BuildContext context, Account account) {
-    // Existing dialog implementation
+    // Implement edit account dialog
   }
 
   void _showDeleteConfirmation(BuildContext context, Account account) {

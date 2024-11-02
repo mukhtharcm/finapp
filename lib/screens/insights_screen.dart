@@ -9,8 +9,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/blocs/category/category_bloc.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
+import 'package:finapp/utils/error_utils.dart';
+import 'package:finapp/widgets/error_widgets.dart';
 
-class InsightsScreen extends StatefulWidget {
+class InsightsScreen extends StatelessWidget {
   final FinanceService financeService;
   final AuthService authService;
 
@@ -19,18 +21,6 @@ class InsightsScreen extends StatefulWidget {
     required this.financeService,
     required this.authService,
   });
-
-  @override
-  State<InsightsScreen> createState() => _InsightsScreenState();
-}
-
-class _InsightsScreenState extends State<InsightsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<TransactionBloc>().add(FetchTransactions());
-    context.read<CategoryBloc>().add(FetchCategories());
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,8 +39,48 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
           return BlocBuilder<TransactionBloc, TransactionState>(
             builder: (context, transactionState) {
+              if (transactionState is TransactionLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (transactionState is TransactionFailure) {
+                return ErrorView(
+                  message: ErrorUtils.getErrorMessage(transactionState.error),
+                  onRetry: () {
+                    context.read<TransactionBloc>().add(FetchTransactions());
+                  },
+                );
+              }
+
               if (transactionState is TransactionSuccess) {
                 final transactions = transactionState.transactions ?? [];
+                if (transactions.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.insights_outlined,
+                          size: 64,
+                          color: theme.colorScheme.outline,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No transactions yet',
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Add some transactions to see insights',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ).animate().fadeIn(duration: 300.ms),
+                  );
+                }
+
                 return RefreshIndicator(
                   onRefresh: () async {
                     context.read<TransactionBloc>().add(FetchTransactions());
@@ -75,6 +105,23 @@ class _InsightsScreenState extends State<InsightsScreen> {
                       _buildSectionTitle('Top Spending Categories', theme),
                       BlocBuilder<CategoryBloc, CategoryState>(
                         builder: (context, categoryState) {
+                          if (categoryState is CategoryLoading) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+
+                          if (categoryState is CategoryFailure) {
+                            return InlineErrorWidget(
+                              message: ErrorUtils.getErrorMessage(
+                                  categoryState.error),
+                              onRetry: () {
+                                context
+                                    .read<CategoryBloc>()
+                                    .add(FetchCategories());
+                              },
+                            );
+                          }
+
                           if (categoryState is CategorySuccess) {
                             return _buildCustomSpendingBreakdown(
                               transactions,
@@ -83,6 +130,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                               theme,
                             );
                           }
+
                           return const SizedBox.shrink();
                         },
                       ),
@@ -93,7 +141,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   ),
                 );
               }
-              return const Center(child: CircularProgressIndicator());
+
+              return const SizedBox.shrink();
             },
           );
         },
