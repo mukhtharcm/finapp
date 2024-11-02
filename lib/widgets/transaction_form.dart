@@ -5,6 +5,7 @@ import 'package:finapp/models/suggested_transaction.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finapp/blocs/category/category_bloc.dart';
 import 'package:finapp/blocs/account/account_bloc.dart';
+import 'package:finapp/blocs/auth/auth_bloc.dart';
 
 class TransactionForm extends StatefulWidget {
   final Transaction? initialTransaction;
@@ -37,25 +38,25 @@ class _TransactionFormState extends State<TransactionForm> {
     final transaction = widget.initialTransaction;
     final suggestedTransaction = widget.initialSuggestedTransaction;
 
+    // Initialize controllers
+    _amountController = TextEditingController();
+    _descriptionController = TextEditingController();
+    _selectedDate = DateTime.now();
+
     // Fetch initial data
     context.read<CategoryBloc>().add(FetchCategories());
     context.read<AccountBloc>().add(FetchAccounts());
 
     if (transaction != null) {
-      _amountController =
-          TextEditingController(text: transaction.amount.toString());
-      _descriptionController =
-          TextEditingController(text: transaction.description);
+      _amountController.text = transaction.amount.toString();
+      _descriptionController.text = transaction.description;
       _selectedDate = transaction.timestamp;
       _selectedCategoryId = _validateCategoryId(transaction.categoryId);
       _selectedAccountId = _validateAccountId(transaction.accountId);
       _transactionType = transaction.type;
     } else if (suggestedTransaction != null) {
-      _amountController =
-          TextEditingController(text: suggestedTransaction.amount.toString());
-      _descriptionController =
-          TextEditingController(text: suggestedTransaction.description);
-      _selectedDate = DateTime.now();
+      _amountController.text = suggestedTransaction.amount.toString();
+      _descriptionController.text = suggestedTransaction.description;
       _selectedCategoryId =
           _validateCategoryId(suggestedTransaction.categoryId);
       _selectedAccountId = _validateAccountId(suggestedTransaction.accountId);
@@ -64,10 +65,7 @@ class _TransactionFormState extends State<TransactionForm> {
               ? TransactionType.income
               : TransactionType.expense;
     } else {
-      _amountController = TextEditingController();
-      _descriptionController = TextEditingController();
-      _selectedDate = DateTime.now();
-      _transactionType = TransactionType.expense;
+      _transactionType = TransactionType.expense; // Default type
     }
   }
 
@@ -258,9 +256,11 @@ class _TransactionFormState extends State<TransactionForm> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
+      final authState = context.read<AuthBloc>().state;
+
       final transaction = Transaction(
         id: widget.initialTransaction?.id,
-        userId: widget.initialTransaction?.userId ?? '',
+        userId: widget.initialTransaction?.userId ?? authState.userId,
         type: _transactionType,
         amount: double.parse(_amountController.text),
         description: _descriptionController.text,

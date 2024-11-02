@@ -14,6 +14,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           userName: authService.userName,
           preferredCurrency:
               authService.currentUser?.preferredCurrency ?? 'USD',
+          userId: authService.currentUser?.id ?? '',
         )) {
     on<InitializeAuth>(_onInitializeAuth);
     on<UpdateUserName>(_onUpdateUserName);

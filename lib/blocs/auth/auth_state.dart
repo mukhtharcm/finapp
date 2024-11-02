@@ -5,6 +5,7 @@ class AuthState extends Equatable {
   final bool isLoading;
   final String userName;
   final String preferredCurrency;
+  final String userId;
   final String? error;
 
   const AuthState({
@@ -12,6 +13,7 @@ class AuthState extends Equatable {
     this.isLoading = false,
     required this.userName,
     required this.preferredCurrency,
+    required this.userId,
     this.error,
   });
 
@@ -20,6 +22,7 @@ class AuthState extends Equatable {
     bool? isLoading,
     String? userName,
     String? preferredCurrency,
+    String? userId,
     String? error,
   }) {
     return AuthState(
@@ -27,6 +30,7 @@ class AuthState extends Equatable {
       isLoading: isLoading ?? this.isLoading,
       userName: userName ?? this.userName,
       preferredCurrency: preferredCurrency ?? this.preferredCurrency,
+      userId: userId ?? this.userId,
       error: error,
     );
   }
@@ -37,6 +41,7 @@ class AuthState extends Equatable {
         isLoading,
         userName,
         preferredCurrency,
+        userId,
         error,
       ];
 }
