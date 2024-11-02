@@ -10,3 +10,7 @@ A new Flutter project.
   - [ ] Block app usage if minimum version not met
   - [ ] Add remote config for min required version
   - [ ] Handle upgrade flow for both Android and iOS
+
+## Notes
+
+- we're using `flutter_launcher_icons` to generate the launcher icon.
