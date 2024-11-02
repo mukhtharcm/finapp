@@ -28,11 +28,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (isAuthenticated) {
         add(InitializeAuth());
       } else {
-        emit(state.copyWith(
-          isAuthenticated: false,
-          userName: 'Guest',
-          preferredCurrency: 'USD',
-        ));
+        add(LogoutRequested());
       }
     });
   }
@@ -57,7 +53,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await authService.updateProfile(name: event.userName);
       emit(state.copyWith(userName: event.userName));
     } catch (e) {
-      // Handle error
       emit(state.copyWith(error: e.toString()));
     }
   }
