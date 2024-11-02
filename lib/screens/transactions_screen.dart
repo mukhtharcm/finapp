@@ -44,17 +44,31 @@ class TransactionsScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _buildTransactionList(
-              context,
-              TransactionType.income,
-              theme.colorScheme.primary,
-              theme.colorScheme.primaryContainer,
+            RefreshIndicator(
+              onRefresh: () async {
+                context.read<TransactionBloc>().add(FetchTransactions());
+                context.read<CategoryBloc>().add(FetchCategories());
+                context.read<AccountBloc>().add(FetchAccounts());
+              },
+              child: _buildTransactionList(
+                context,
+                TransactionType.income,
+                theme.colorScheme.primary,
+                theme.colorScheme.primaryContainer,
+              ),
             ),
-            _buildTransactionList(
-              context,
-              TransactionType.expense,
-              theme.colorScheme.error,
-              theme.colorScheme.errorContainer,
+            RefreshIndicator(
+              onRefresh: () async {
+                context.read<TransactionBloc>().add(FetchTransactions());
+                context.read<CategoryBloc>().add(FetchCategories());
+                context.read<AccountBloc>().add(FetchAccounts());
+              },
+              child: _buildTransactionList(
+                context,
+                TransactionType.expense,
+                theme.colorScheme.error,
+                theme.colorScheme.errorContainer,
+              ),
             ),
           ],
         ),
@@ -73,7 +87,6 @@ class TransactionsScreen extends StatelessWidget {
         return BlocBuilder<TransactionBloc, TransactionState>(
           builder: (context, transactionState) {
             if (transactionState is TransactionLoading) {
-              // return const Center(child: CircularProgressIndicator());
               return Skeletonizer(
                 enabled: true,
                 child: ListView.builder(
@@ -98,11 +111,13 @@ class TransactionsScreen extends StatelessWidget {
             }
 
             if (transactionState is TransactionFailure) {
-              return ErrorView(
-                message: ErrorUtils.getErrorMessage(transactionState.error),
-                onRetry: () {
-                  context.read<TransactionBloc>().add(FetchTransactions());
-                },
+              return Center(
+                child: ErrorView(
+                  message: ErrorUtils.getErrorMessage(transactionState.error),
+                  onRetry: () {
+                    context.read<TransactionBloc>().add(FetchTransactions());
+                  },
+                ),
               );
             }
 
