@@ -15,6 +15,9 @@ import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finapp/blocs/category/category_bloc.dart';
 import 'package:finapp/blocs/account/account_bloc.dart';
+import 'package:finapp/widgets/suggested_transaction_card.dart';
+import 'package:finapp/blocs/auth/auth_bloc.dart';
+import 'package:finapp/utils/currency_utils.dart';
 
 class VoiceTransactionScreen extends StatefulWidget {
   final FinanceService financeService;
@@ -173,99 +176,27 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
   }
 
   Widget _buildSuggestedTransactionsList(ThemeData theme) {
+    final currencySymbol = CurrencyUtils.getCurrencySymbol(
+      context.read<AuthBloc>().state.preferredCurrency,
+    );
+
     return Expanded(
       child: ListView.builder(
         itemCount: _suggestedTransactions.length,
         itemBuilder: (context, index) {
           final transaction = _suggestedTransactions[index];
           final category = _findCategory(transaction.categoryId);
-          final bool isValidCategory = category != null;
 
-          return AnimatedBuilder(
-            animation: _addingController,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _addingStatus[transaction] == true
-                    ? 1.0 - _addingController.value
-                    : 1.0,
-                child: child,
-              );
-            },
-            child: Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: isValidCategory
-                      ? (transaction.type == SuggestedTransactionType.expense
-                          ? theme.colorScheme.errorContainer
-                          : theme.colorScheme.primaryContainer)
-                      : theme.colorScheme.errorContainer,
-                  child: Text(
-                    isValidCategory ? category.icon : '!',
-                    style: TextStyle(
-                      color: isValidCategory
-                          ? (transaction.type ==
-                                  SuggestedTransactionType.expense
-                              ? theme.colorScheme.onErrorContainer
-                              : theme.colorScheme.onPrimaryContainer)
-                          : theme.colorScheme.error,
-                    ),
-                  ),
-                ),
-                title: Text(transaction.description),
-                subtitle:
-                    Text(isValidCategory ? category.name : 'Invalid Category'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      transaction.formattedAmount(
-                          widget.financeService.getCurrentUserId()!),
-                      style: TextStyle(
-                        color:
-                            transaction.type == SuggestedTransactionType.expense
-                                ? theme.colorScheme.error
-                                : theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: isValidCategory
-                          ? () => _addTransaction(transaction)
-                          : () => _showInvalidCategoryDialog(transaction),
-                      style: ElevatedButton.styleFrom(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        minimumSize: Size(60, 36),
-                        backgroundColor: isValidCategory
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.error,
-                        foregroundColor: isValidCategory
-                            ? theme.colorScheme.onPrimary
-                            : theme.colorScheme.onError,
-                      ),
-                      child: _addingStatus[transaction] == true
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  isValidCategory
-                                      ? theme.colorScheme.onPrimary
-                                      : theme.colorScheme.onError,
-                                ),
-                              ),
-                            )
-                          : Text(isValidCategory ? 'Add' : 'Fix'),
-                    ),
-                  ],
-                ),
-                onTap: () => _editTransaction(transaction),
-              ),
-            ),
-          ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
+          return SuggestedTransactionCard(
+            transaction: transaction,
+            category: category,
+            currencySymbol: currencySymbol,
+            opacity: _addingStatus[transaction] == true
+                ? 1.0 - _addingController.value
+                : 1.0,
+            onEdit: () => _editSuggestedTransaction(transaction),
+            onAdd: () => _addTransaction(transaction),
+          );
         },
       ),
     );
@@ -603,5 +534,24 @@ class _VoiceTransactionScreenState extends State<VoiceTransactionScreen>
       );
       rethrow;
     }
+  }
+
+  void _editSuggestedTransaction(SuggestedTransaction transaction) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTransactionScreen.suggested(
+          transaction: transaction,
+          onEdit: (editedTransaction) {
+            setState(() {
+              final index = _suggestedTransactions.indexOf(transaction);
+              if (index != -1) {
+                _suggestedTransactions[index] = editedTransaction;
+              }
+            });
+          },
+        ),
+      ),
+    );
   }
 }
