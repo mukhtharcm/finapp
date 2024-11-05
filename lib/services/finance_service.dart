@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:finapp/models/transaction.dart';
@@ -32,6 +34,24 @@ class FinanceService {
           expand: 'category',
         );
     return records.map((record) => Transaction.fromRecord(record)).toList();
+  }
+
+  Stream<RecordSubscriptionEvent> transactionsStream() async* {
+    final controller = StreamController<RecordSubscriptionEvent>();
+
+    final unsubFunc = await pb.realtime.subscribe('transactions', (e) {
+      if (!controller.isClosed) {
+        final event = RecordSubscriptionEvent.fromJson(e.jsonData());
+        controller.add(event);
+      }
+    });
+
+    controller.onCancel = () {
+      unsubFunc();
+      controller.close();
+    };
+
+    yield* controller.stream;
   }
 
   Future<List<Category>> fetchCategories() async {

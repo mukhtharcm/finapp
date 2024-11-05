@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:finapp/services/theme_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:finapp/services/auth_service.dart';
@@ -11,10 +13,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 final getIt = GetIt.instance;
 
 String _getPocketBaseUrl() {
-  // if (kDebugMode && Platform.isAndroid) {
-  //   return 'http://192.168.209.209:8090';
-  // }
-  return kDebugMode ? 'http://pb.76545689.xyz' : 'https://finbot.76545689.xyz';
+  if (kDebugMode && Platform.isAndroid) {
+    return 'http://192.168.209.209:8090';
+  }
+  // return kDebugMode ? 'http://pb.76545689.xyz' : 'https://finbot.76545689.xyz';
+  return kDebugMode ? 'http://localhost:8090' : 'https://finbot.76545689.xyz';
 }
 
 Future<void> setupServiceLocator() async {

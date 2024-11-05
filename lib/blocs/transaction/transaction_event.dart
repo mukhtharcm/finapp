@@ -39,3 +39,15 @@ class UpdateTransaction extends TransactionEvent {
   @override
   List<Object> get props => [id, transaction];
 }
+
+// Private event for handling stream updates
+class _TransactionStreamEvent extends TransactionEvent {
+  final RecordSubscriptionEvent streamEvent;
+
+  const _TransactionStreamEvent(this.streamEvent);
+
+  @override
+  List<Object> get props => [streamEvent];
+}
+
+class StartTransactionStream extends TransactionEvent {}

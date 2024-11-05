@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:finapp/services/finance_service.dart';
+import 'package:pocketbase/pocketbase.dart';
 
 part 'transaction_event.dart';
 part 'transaction_state.dart';
@@ -15,6 +17,64 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     on<FetchTransactions>(_onFetchTransactions);
     on<DeleteTransaction>(_onDeleteTransaction);
     on<UpdateTransaction>(_onUpdateTransaction);
+    on<StartTransactionStream>(_onStartTransactionStream);
+  }
+
+  Future<void> _onStartTransactionStream(
+    StartTransactionStream event,
+    Emitter<TransactionState> emit,
+  ) async {
+    try {
+      // Initial fetch
+      final initialTransactions = await financeService.fetchTransactions();
+      emit(TransactionSuccess(transactions: initialTransactions));
+
+      // Listen to realtime updates
+      await emit.forEach(
+        financeService.transactionsStream(),
+        onData: (RecordSubscriptionEvent event) {
+          if (state is! TransactionSuccess) return state;
+          final currentState = state as TransactionSuccess;
+          final currentTransactions =
+              List<Transaction>.from(currentState.transactions ?? []);
+
+          switch (event.action) {
+            case 'create':
+              if (event.record != null) {
+                final newTransaction = Transaction.fromRecord(event.record!);
+                currentTransactions.insert(0, newTransaction);
+              }
+              break;
+
+            case 'update':
+              if (event.record != null) {
+                final updatedTransaction =
+                    Transaction.fromRecord(event.record!);
+                final index = currentTransactions
+                    .indexWhere((t) => t.id == updatedTransaction.id);
+                if (index != -1) {
+                  currentTransactions[index] = updatedTransaction;
+                }
+              }
+              break;
+
+            case 'delete':
+              if (event.record?.id != null) {
+                currentTransactions
+                    .removeWhere((t) => t.id == event.record!.id);
+              }
+              break;
+          }
+
+          return TransactionSuccess(transactions: currentTransactions);
+        },
+        onError: (error, stackTrace) {
+          return TransactionFailure(error: error.toString());
+        },
+      );
+    } catch (e) {
+      emit(TransactionFailure(error: e.toString()));
+    }
   }
 
   Future<void> _onAddTransaction(
@@ -24,8 +84,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     emit(TransactionLoading());
     try {
       await financeService.addTransaction(event.transaction);
-      final transactions = await financeService.fetchTransactions();
-      emit(TransactionSuccess(transactions: transactions));
+      // Emit current state to stop loading
+      if (state is TransactionSuccess) {
+        emit(state);
+      } else {
+        // Fallback in case we don't have a current state
+        final transactions = await financeService.fetchTransactions();
+        emit(TransactionSuccess(transactions: transactions));
+      }
     } catch (e) {
       emit(TransactionFailure(error: e.toString()));
     }
@@ -51,8 +117,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     emit(TransactionLoading());
     try {
       await financeService.deleteTransaction(event.id);
-      final transactions = await financeService.fetchTransactions();
-      emit(TransactionSuccess(transactions: transactions));
+      // Emit current state to stop loading
+      if (state is TransactionSuccess) {
+        emit(state);
+      } else {
+        // Fallback in case we don't have a current state
+        final transactions = await financeService.fetchTransactions();
+        emit(TransactionSuccess(transactions: transactions));
+      }
     } catch (e) {
       emit(TransactionFailure(error: e.toString()));
     }
@@ -65,8 +137,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     emit(TransactionLoading());
     try {
       await financeService.updateTransaction(event.id, event.transaction);
-      final transactions = await financeService.fetchTransactions();
-      emit(TransactionSuccess(transactions: transactions));
+      // Emit current state to stop loading
+      if (state is TransactionSuccess) {
+        emit(state);
+      } else {
+        // Fallback in case we don't have a current state
+        final transactions = await financeService.fetchTransactions();
+        emit(TransactionSuccess(transactions: transactions));
+      }
     } catch (e) {
       emit(TransactionFailure(error: e.toString()));
     }
