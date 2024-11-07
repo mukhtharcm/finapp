@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:finapp/models/suggested_transaction.dart';
 import 'package:finapp/models/category.dart';
-import 'package:finapp/utils/currency_utils.dart';
 
 class SuggestedTransactionCard extends StatelessWidget {
   final SuggestedTransaction transaction;
