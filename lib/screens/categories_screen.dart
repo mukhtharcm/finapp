@@ -5,6 +5,7 @@ import 'package:finapp/blocs/category/category_bloc.dart';
 import 'package:finapp/models/category.dart';
 import 'package:finapp/utils/error_utils.dart';
 import 'package:finapp/widgets/error_widgets.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
@@ -19,7 +20,26 @@ class CategoriesScreen extends StatelessWidget {
       body: BlocBuilder<CategoryBloc, CategoryState>(
         builder: (context, state) {
           if (state is CategoryLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Skeletonizer(
+              enabled: true,
+              child: ListView.builder(
+                itemCount: 5,
+                itemBuilder: (context, index) => Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: theme.colorScheme.secondaryContainer,
+                      child: const Text('🏷️'),
+                    ),
+                    title: const Text('Category Name'),
+                    trailing: const Icon(Icons.more_vert),
+                  ),
+                ),
+              ),
+            );
           }
 
           if (state is CategoryFailure) {
