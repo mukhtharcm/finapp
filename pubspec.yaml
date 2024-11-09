@@ -30,6 +30,7 @@ dependencies:
   equatable: ^2.0.5
   skeletonizer: ^1.4.2
   package_info_plus: ^8.1.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

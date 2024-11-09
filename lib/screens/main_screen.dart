@@ -9,6 +9,7 @@ import 'package:finapp/screens/voice_transaction_screen.dart';
 import 'package:finapp/screens/add_transaction_screen.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
+import 'package:finapp/screens/scan_receipt_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final AuthService authService;
@@ -210,12 +211,14 @@ class _MainScreenState extends State<MainScreen> {
                           description: 'Take a photo of your receipt',
                           icon: Icons.document_scanner,
                           color: theme.colorScheme.tertiary,
-                          isComingSoon: true,
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Coming soon! 📸'),
-                                behavior: SnackBarBehavior.floating,
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ScanReceiptScreen(
+                                  financeService: widget.financeService,
+                                ),
                               ),
                             );
                           },

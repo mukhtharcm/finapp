@@ -47,5 +47,9 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs access to the microphone to record voice transactions.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to scan receipts</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photos to select receipt images</string>
 </dict>
 </plist>
