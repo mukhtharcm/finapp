@@ -41,17 +41,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       icon: Icons.account_balance_wallet,
     ),
     OnboardingPage(
-      title: 'Track Expenses',
-      description: 'Easily record and categorize your expenses.',
-      icon: Icons.money_off,
+      title: 'Smart Input',
+      description:
+          'Add transactions by voice, scan receipts, or manual entry - your choice!',
+      icon: Icons.auto_awesome,
     ),
     OnboardingPage(
-      title: 'Manage Income',
-      description: 'Keep track of all your income sources.',
-      icon: Icons.attach_money,
+      title: 'Just Talk',
+      description:
+          'Simply tell the app about your spending - it\'s like talking to a friend.',
+      icon: Icons.mic,
     ),
     OnboardingPage(
-      title: 'Gain Insights',
+      title: 'Scan Receipts',
+      description: 'Take a photo of your receipt and let AI do the work.',
+      icon: Icons.document_scanner,
+    ),
+    OnboardingPage(
+      title: 'Track & Analyze',
       description: 'Get valuable insights into your spending habits.',
       icon: Icons.insights,
     ),
