@@ -14,7 +14,7 @@ final getIt = GetIt.instance;
 
 String _getPocketBaseUrl() {
   if (kDebugMode && Platform.isAndroid) {
-    return 'http://192.168.209.209:8090';
+    return 'http://192.168.70.209:8090';
   }
   // return kDebugMode ? 'http://pb.76545689.xyz' : 'https://finbot.76545689.xyz';
   return kDebugMode ? 'http://localhost:8090' : 'https://finbot.76545689.xyz';

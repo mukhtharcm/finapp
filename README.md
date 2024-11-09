@@ -11,6 +11,8 @@ A new Flutter project.
   - [ ] Add remote config for min required version
   - [ ] Handle upgrade flow for both Android and iOS
 
+- [ ] Realtime not working properly
+
 ## Notes
 
 - we're using `flutter_launcher_icons` to generate the launcher icon.

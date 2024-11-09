@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:finapp/blocs/account/account_bloc.dart';
 import 'package:finapp/models/category.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -15,6 +16,8 @@ import 'package:finapp/blocs/category/category_bloc.dart';
 import 'package:finapp/blocs/auth/auth_bloc.dart';
 import 'package:finapp/widgets/suggested_transaction_card.dart';
 import 'package:finapp/utils/currency_utils.dart';
+import 'package:finapp/utils/error_utils.dart';
+import 'package:finapp/widgets/error_widgets.dart';
 
 class ScanReceiptScreen extends StatefulWidget {
   final FinanceService financeService;
@@ -69,7 +72,7 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> {
       });
 
       final response = await dio.post(
-        '/app/api/process-receipt',
+        '/app/api/process-image',
         data: formData,
         options: Options(
           headers: {'Authorization': 'Bearer ${pb.authStore.token}'},
@@ -78,6 +81,24 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> {
 
       final List<dynamic> transactionsJson =
           response.data is String ? json.decode(response.data) : response.data;
+
+      if (transactionsJson.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: InlineErrorWidget(
+                message:
+                    'No transactions detected. Please try again with a clearer image.',
+                onRetry: _showImageSourceDialog,
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
 
       setState(() {
         _suggestedTransactions = transactionsJson
@@ -93,7 +114,15 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to process receipt: $e')),
+          SnackBar(
+            content: InlineErrorWidget(
+              message: ErrorUtils.getErrorMessage(e.toString()),
+              onRetry: _showImageSourceDialog,
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -203,11 +232,16 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> {
               },
             ),
       floatingActionButton: _suggestedTransactions.isEmpty
-          ? null
-          : FloatingActionButton(
+          ? FloatingActionButton.extended(
               onPressed: _showImageSourceDialog,
-              child: const Icon(Icons.add_a_photo),
-            ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack),
+              icon: const Icon(Icons.add_a_photo),
+              label: const Text('Add Receipt'),
+            ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack)
+          : FloatingActionButton.extended(
+              onPressed: _addAllTransactions,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Add All'),
+            ).animate().scale(delay: 300.ms, duration: 200.ms),
     );
   }
 
@@ -266,6 +300,123 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> {
           SnackBar(content: Text('Failed to add transaction: $e')),
         );
       }
+    }
+  }
+
+  Future<void> _addAllTransactions() async {
+    // First validate all transactions
+    final invalidTransactions = _suggestedTransactions.where((transaction) {
+      final categoryState = context.read<CategoryBloc>().state;
+      final accountState = context.read<AccountBloc>().state;
+
+      final categoryExists = categoryState is CategorySuccess &&
+          categoryState.categories
+              .any((category) => category.id == transaction.categoryId);
+      final accountExists = accountState is AccountSuccess &&
+          accountState.accounts
+              .any((account) => account.id == transaction.accountId);
+
+      return !categoryExists || !accountExists;
+    }).toList();
+
+    if (invalidTransactions.isNotEmpty) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Invalid Transactions'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Some transactions have invalid categories or accounts and cannot be added:',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 16),
+                ...invalidTransactions.map((transaction) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '• ${transaction.description}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    )),
+                const SizedBox(height: 16),
+                Text(
+                  'Please edit these transactions before adding them.',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _addValidTransactions();
+                },
+                child: const Text('Add Valid Only'),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
+    // If all transactions are valid, add them
+    await _addValidTransactions();
+  }
+
+  Future<void> _addValidTransactions() async {
+    final validTransactions = _suggestedTransactions.where((transaction) {
+      final categoryState = context.read<CategoryBloc>().state;
+      final accountState = context.read<AccountBloc>().state;
+
+      final categoryExists = categoryState is CategorySuccess &&
+          categoryState.categories
+              .any((category) => category.id == transaction.categoryId);
+      final accountExists = accountState is AccountSuccess &&
+          accountState.accounts
+              .any((account) => account.id == transaction.accountId);
+
+      return categoryExists && accountExists;
+    }).toList();
+
+    int successCount = 0;
+    int failCount = 0;
+
+    for (var transaction in validTransactions) {
+      try {
+        await _addTransaction(transaction);
+        successCount++;
+      } catch (e) {
+        failCount++;
+        debugPrint('Failed to add transaction: $e');
+      }
+    }
+
+    if (mounted) {
+      String message;
+      if (failCount == 0) {
+        message = 'All transactions added successfully';
+      } else if (successCount == 0) {
+        message = 'Failed to add any transactions';
+      } else {
+        message = '$successCount transactions added, $failCount failed';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: failCount == 0
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 }
