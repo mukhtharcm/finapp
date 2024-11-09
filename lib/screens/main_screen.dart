@@ -1,3 +1,4 @@
+import 'package:finapp/blocs/transaction/transaction_bloc.dart';
 import 'package:finapp/models/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -10,6 +11,7 @@ import 'package:finapp/screens/add_transaction_screen.dart';
 import 'package:finapp/services/auth_service.dart';
 import 'package:finapp/services/finance_service.dart';
 import 'package:finapp/screens/scan_receipt_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MainScreen extends StatefulWidget {
   final AuthService authService;
@@ -43,6 +45,13 @@ class _MainScreenState extends State<MainScreen> {
       financeService: widget.financeService,
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Start listening to transaction updates
+    context.read<TransactionBloc>().add(StartTransactionStream());
+  }
 
   void _onItemTapped(int index) {
     setState(() {

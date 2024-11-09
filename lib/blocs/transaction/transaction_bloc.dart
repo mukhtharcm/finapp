@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:finapp/models/transaction.dart';
@@ -33,6 +34,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       await emit.forEach(
         financeService.transactionsStream(),
         onData: (RecordSubscriptionEvent event) {
+          debugPrint('onData: $event');
           if (state is! TransactionSuccess) return state;
           final currentState = state as TransactionSuccess;
           final currentTransactions =
@@ -81,17 +83,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     AddTransaction event,
     Emitter<TransactionState> emit,
   ) async {
-    emit(TransactionLoading());
     try {
       await financeService.addTransaction(event.transaction);
-      // Emit current state to stop loading
-      if (state is TransactionSuccess) {
-        emit(state);
-      } else {
-        // Fallback in case we don't have a current state
-        final transactions = await financeService.fetchTransactions();
-        emit(TransactionSuccess(transactions: transactions));
-      }
     } catch (e) {
       emit(TransactionFailure(error: e.toString()));
     }
@@ -114,17 +107,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     DeleteTransaction event,
     Emitter<TransactionState> emit,
   ) async {
-    emit(TransactionLoading());
     try {
       await financeService.deleteTransaction(event.id);
-      // Emit current state to stop loading
-      if (state is TransactionSuccess) {
-        emit(state);
-      } else {
-        // Fallback in case we don't have a current state
-        final transactions = await financeService.fetchTransactions();
-        emit(TransactionSuccess(transactions: transactions));
-      }
     } catch (e) {
       emit(TransactionFailure(error: e.toString()));
     }
@@ -134,17 +118,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     UpdateTransaction event,
     Emitter<TransactionState> emit,
   ) async {
-    emit(TransactionLoading());
     try {
       await financeService.updateTransaction(event.id, event.transaction);
-      // Emit current state to stop loading
-      if (state is TransactionSuccess) {
-        emit(state);
-      } else {
-        // Fallback in case we don't have a current state
-        final transactions = await financeService.fetchTransactions();
-        emit(TransactionSuccess(transactions: transactions));
-      }
     } catch (e) {
       emit(TransactionFailure(error: e.toString()));
     }
