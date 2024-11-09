@@ -109,14 +109,7 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: 0.85,
-                      ),
+                    sliver: SliverList(
                       delegate: SliverChildListDelegate([
                         _buildOptionCard(
                           context,
@@ -125,7 +118,7 @@ class _MainScreenState extends State<MainScreen> {
                           icon: Icons.edit_rounded,
                           color: theme.colorScheme.primary,
                           onTap: () {
-                            // Show a small bottom sheet for transaction type selection
+                            // Show transaction type selection
                             showModalBottomSheet(
                               context: context,
                               builder: (context) => SafeArea(
@@ -152,9 +145,7 @@ class _MainScreenState extends State<MainScreen> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  AddTransactionScreen(
-                                                // financeService:
-                                                //     widget.financeService,
+                                                  const AddTransactionScreen(
                                                 transactionType:
                                                     TransactionType.income,
                                               ),
@@ -179,9 +170,7 @@ class _MainScreenState extends State<MainScreen> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  AddTransactionScreen(
-                                                // financeService:
-                                                //     widget.financeService,
+                                                  const AddTransactionScreen(
                                                 transactionType:
                                                     TransactionType.expense,
                                               ),
@@ -196,57 +185,52 @@ class _MainScreenState extends State<MainScreen> {
                             );
                           },
                         ),
-                        _buildOptionCard(
-                          context,
-                          title: 'Just Talk',
-                          description: 'Tell me what you spent',
-                          icon: Icons.mic,
-                          color: theme.colorScheme.secondary,
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => VoiceTransactionScreen(
-                                  financeService: widget.financeService,
-                                ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildOptionCard(
+                                context,
+                                title: 'Just Talk',
+                                description: 'Tell me what you spent',
+                                icon: Icons.mic,
+                                color: theme.colorScheme.secondary,
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          VoiceTransactionScreen(
+                                        financeService: widget.financeService,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
-                        _buildOptionCard(
-                          context,
-                          title: 'Scan Receipt',
-                          description: 'Take a photo of your receipt',
-                          icon: Icons.document_scanner,
-                          color: theme.colorScheme.tertiary,
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ScanReceiptScreen(
-                                  financeService: widget.financeService,
-                                ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildOptionCard(
+                                context,
+                                title: 'Scan Receipt',
+                                description: 'Take a photo of your receipt',
+                                icon: Icons.document_scanner,
+                                color: theme.colorScheme.tertiary,
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ScanReceiptScreen(
+                                        financeService: widget.financeService,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
-                        _buildOptionCard(
-                          context,
-                          title: 'Type Naturally',
-                          description: 'Write it like you\'d tell a friend',
-                          icon: Icons.chat_bubble_outline,
-                          color: theme.colorScheme.error,
-                          isComingSoon: true,
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Coming soon! ✨'),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          },
+                            ),
+                          ],
                         ),
                       ]),
                     ),
