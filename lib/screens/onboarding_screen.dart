@@ -31,7 +31,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.initState();
     final authState = context.read<AuthBloc>().state;
     _nameController.text = authState.userName;
-    _selectedCurrency = authState.preferredCurrency;
+    if (CurrencyUtils.getAllCurrencyCodes()
+        .contains(authState.preferredCurrency)) {
+      _selectedCurrency = authState.preferredCurrency;
+    } else {
+      _selectedCurrency =
+          'USD'; // Default to USD if preferredCurrency is invalid
+    }
   }
 
   final List<OnboardingPage> _pages = [
